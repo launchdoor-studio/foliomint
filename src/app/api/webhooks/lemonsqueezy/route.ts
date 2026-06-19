@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { eq, or } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { portfolios, users } from '@/lib/db/schema';
+import { paymentWebhookEvents, portfolios, users } from '@/lib/db/schema';
 import { mapLemonSubscriptionStatus, verifyLemonSqueezyWebhookSignature } from '@/lib/lemonsqueezy';
 
 type WebhookPayload = {
   meta?: {
+    event_id?: string;
     event_name?: string;
     custom_data?: { user_id?: string };
   };
@@ -17,9 +18,19 @@ type WebhookPayload = {
       customer_id?: number;
       user_email?: string;
       status?: string;
+      variant_id?: number;
+      renews_at?: string | null;
+      ends_at?: string | null;
+      trial_ends_at?: string | null;
     };
   };
 };
+
+function parseLemonDate(input: string | null | undefined): Date | null {
+  if (!input) return null;
+  const date = new Date(input);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
 export async function POST(request: Request) {
   const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET?.trim();
@@ -46,6 +57,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
+  const eventId = payload.meta?.event_id;
+  if (eventId) {
+    const inserted = await db
+      .insert(paymentWebhookEvents)
+      .values({ id: eventId, eventName })
+      .onConflictDoNothing()
+      .returning({ id: paymentWebhookEvents.id });
+
+    if (inserted.length === 0) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+  }
+
   const data = payload.data;
   const attrs = data?.attributes;
   const subscriptionId = data?.id != null ? String(data.id) : undefined;
@@ -57,6 +81,10 @@ export async function POST(request: Request) {
   const customerId = attrs.customer_id != null ? String(attrs.customer_id) : undefined;
   const lsStatus = attrs.status;
   const userEmail = attrs.user_email?.trim();
+  const variantId = attrs.variant_id != null ? String(attrs.variant_id) : undefined;
+  const renewsAt = parseLemonDate(attrs.renews_at);
+  const endsAt = parseLemonDate(attrs.ends_at);
+  const trialEndsAt = parseLemonDate(attrs.trial_ends_at);
 
   const applySubscriptionPatch = async (userId: string) => {
     const appStatus = lsStatus ? mapLemonSubscriptionStatus(lsStatus) : 'active';
@@ -66,11 +94,15 @@ export async function POST(request: Request) {
       .set({
         subscriptionStatus: appStatus,
         ...(customerId ? { lemonSqueezyCustomerId: customerId } : {}),
+        ...(variantId ? { lemonSqueezyVariantId: variantId } : {}),
         lemonSqueezySubscriptionId: subscriptionId,
+        subscriptionRenewsAt: renewsAt,
+        subscriptionEndsAt: endsAt,
+        trialEndsAt,
       })
       .where(eq(users.id, userId));
 
-    if (appStatus === 'active') {
+    if (appStatus === 'active' || appStatus === 'trialing') {
       await db
         .update(portfolios)
         .set({ expiresAt: null, updatedAt: new Date() })
@@ -106,11 +138,15 @@ export async function POST(request: Request) {
           .set({
             subscriptionStatus: appStatus,
             ...(customerId ? { lemonSqueezyCustomerId: customerId } : {}),
+            ...(variantId ? { lemonSqueezyVariantId: variantId } : {}),
             lemonSqueezySubscriptionId: subscriptionId,
+            subscriptionRenewsAt: renewsAt,
+            subscriptionEndsAt: endsAt,
+            trialEndsAt,
           })
           .where(eq(users.email, userEmail));
 
-        if (appStatus === 'active' && byEmail?.id) {
+        if ((appStatus === 'active' || appStatus === 'trialing') && byEmail?.id) {
           await db
             .update(portfolios)
             .set({ expiresAt: null, updatedAt: new Date() })
@@ -139,9 +175,13 @@ export async function POST(request: Request) {
           .set({
             subscriptionStatus: appStatus,
             ...(customerId ? { lemonSqueezyCustomerId: customerId } : {}),
+            ...(variantId ? { lemonSqueezyVariantId: variantId } : {}),
+            subscriptionRenewsAt: renewsAt,
+            subscriptionEndsAt: endsAt,
+            trialEndsAt,
           })
           .where(eq(users.id, bySub.id));
-        if (appStatus === 'active') {
+        if (appStatus === 'active' || appStatus === 'trialing') {
           await db
             .update(portfolios)
             .set({ expiresAt: null, updatedAt: new Date() })
@@ -168,11 +208,15 @@ export async function POST(request: Request) {
           .set({
             subscriptionStatus: appStatus,
             ...(customerId ? { lemonSqueezyCustomerId: customerId } : {}),
+            ...(variantId ? { lemonSqueezyVariantId: variantId } : {}),
             lemonSqueezySubscriptionId: subscriptionId,
+            subscriptionRenewsAt: renewsAt,
+            subscriptionEndsAt: endsAt,
+            trialEndsAt,
           })
           .where(eq(users.email, userEmail));
 
-        if (appStatus === 'active' && byEmail?.id) {
+        if ((appStatus === 'active' || appStatus === 'trialing') && byEmail?.id) {
           await db
             .update(portfolios)
             .set({ expiresAt: null, updatedAt: new Date() })

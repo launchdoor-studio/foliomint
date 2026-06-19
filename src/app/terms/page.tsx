@@ -57,9 +57,8 @@ export default function TermsPage() {
 
             <h2>4. Plans, billing, and changes</h2>
             <p>
-              Paid features may require a subscription or one-time payment through our payment provider. Fees,
-              renewals, and taxes are described at checkout. We may change pricing or features with reasonable
-              notice where required by law.
+              Paid features require a subscription through our payment provider. Fees, renewals, and taxes are
+              described at checkout. We may change pricing or features with reasonable notice where required by law.
             </p>
 
             <h2>5. Disclaimers</h2>

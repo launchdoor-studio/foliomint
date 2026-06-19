@@ -7,13 +7,10 @@ const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     <div
       ref={ref}
       className={cn(
-        'group relative rounded-lg border bg-card text-card-foreground shadow-sm',
-        'transition-[transform,box-shadow,border-color] duration-300',
-        'hover:-translate-y-0.5 hover:shadow-lg hover:shadow-foreground/5',
-        'dark:hover:shadow-black/30',
-        'before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:opacity-0 before:transition-opacity before:duration-300',
-        'before:bg-[radial-gradient(800px_circle_at_20%_0%,hsl(var(--primary)/0.12),transparent_45%)]',
-        'hover:before:opacity-100',
+        'group relative rounded-md border-2 border-foreground bg-card text-card-foreground',
+        'shadow-[6px_6px_0_0_hsl(var(--foreground))] transition-[transform,box-shadow,background-color] duration-200',
+        'hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0_0_hsl(var(--foreground))]',
+        'dark:shadow-[6px_6px_0_0_hsl(var(--primary))] dark:hover:shadow-[8px_8px_0_0_hsl(var(--primary))]',
         className,
       )}
       {...props}

@@ -28,21 +28,21 @@ const plans: Plan[] = [
     name: 'Free',
     price: '$0',
     period: 'forever',
-    description: 'Perfect for getting started with your portfolio.',
+    description: 'Publish a real proof-of-work site without paying first.',
     features: [
-      { text: '3 AI parses per day', included: true },
+      { text: '3 Groq AI parses per day', included: true },
       { text: 'Editable form editor', included: true },
       { text: 'Light & dark mode', included: true },
       { text: '10 platform integrations', included: true },
       { text: 'Basic analytics (view counts)', included: true },
-      { text: 'Classic theme', included: true },
+      { text: 'Core proof-first portfolio themes', included: true },
       { text: 'Hosted portfolio (3-month expiry)', included: true },
       { text: 'Unlimited uploads', included: false },
       { text: 'Multiple portfolios', included: false },
       { text: 'Custom domains', included: false },
       { text: 'Advanced analytics', included: false },
       { text: 'Blog management', included: false },
-      { text: 'Neubrutalism theme', included: false },
+      { text: 'Premium themes and advanced customization', included: false },
     ],
     cta: 'Get Started',
     ctaHref: '/generate',
@@ -50,16 +50,17 @@ const plans: Plan[] = [
   },
   {
     name: 'Pro',
-    price: '$4',
+    price: '$5',
     period: '/month',
-    description: 'For professionals who want the complete experience.',
+    description: 'For people turning attention into interviews, clients, or opportunities.',
     features: [
-      { text: 'Unlimited AI parses', included: true },
+      { text: '50 Groq AI parses per day', included: true },
+      { text: 'AI rewrites, gaps, and positioning suggestions', included: true },
       { text: 'Editable form editor', included: true },
       { text: 'Light & dark mode', included: true },
       { text: '10 platform integrations', included: true },
       { text: 'Advanced analytics (referrer, device, geo)', included: true },
-      { text: 'All themes (Classic + Neubrutalism)', included: true },
+      { text: 'All themes and advanced identity controls', included: true },
       { text: 'Hosted portfolio (no expiry)', included: true },
       { text: 'Unlimited uploads', included: true },
       { text: 'Multiple portfolios', included: true },
@@ -107,7 +108,7 @@ export function PricingPlans({
             )}
           >
             {plan.highlighted && (
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Best leverage</Badge>
             )}
             <CardHeader className="pb-4">
               <CardTitle className="text-xl">{plan.name}</CardTitle>

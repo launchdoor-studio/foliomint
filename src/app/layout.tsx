@@ -1,18 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Instrument_Sans, JetBrains_Mono } from 'next/font/google';
+import { DM_Sans, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import { Providers } from '@/components/providers';
 
 import './globals.css';
 
-const fontSans = Instrument_Sans({
+const fontSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
 });
 
-const fontDisplay = Fraunces({
+const fontDisplay = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-display',
+  weight: ['400', '500', '600', '700'],
 });
 
 const fontMono = JetBrains_Mono({
@@ -22,11 +23,11 @@ const fontMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'FolioMint — Turn Your Resume Into a Portfolio',
+    default: 'FolioMint — Mint Proof From Your Resume',
     template: '%s | FolioMint',
   },
   description:
-    'Convert your resume into a beautiful, editable portfolio website. AI-powered parsing, multiple themes, and custom domains.',
+    'Turn resume raw material into a hosted proof-of-work portfolio with AI-assisted structure, editable themes, analytics, and custom domains.',
   keywords: [
     'portfolio',
     'resume',
@@ -40,15 +41,15 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     siteName: 'FolioMint',
-    title: 'FolioMint — Turn Your Resume Into a Portfolio',
+    title: 'FolioMint — Mint Proof From Your Resume',
     description:
-      'Convert your resume into a beautiful, editable portfolio website in minutes.',
+      'Turn resume raw material into a hosted proof-of-work portfolio you can edit, publish, and grow.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FolioMint — Turn Your Resume Into a Portfolio',
+    title: 'FolioMint — Mint Proof From Your Resume',
     description:
-      'Convert your resume into a beautiful, editable portfolio website in minutes.',
+      'Turn resume raw material into a hosted proof-of-work portfolio you can edit, publish, and grow.',
   },
   icons: {
     icon: [{ url: '/logo.svg', type: 'image/svg+xml' }],
@@ -59,8 +60,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#131a1e' },
+    { media: '(prefers-color-scheme: light)', color: '#f1ead5' },
+    { media: '(prefers-color-scheme: dark)', color: '#091611' },
   ],
   width: 'device-width',
   initialScale: 1,

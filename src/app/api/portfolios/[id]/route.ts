@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 
+import { getTierLimits, getUserTier } from '@/lib/access';
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { portfolios } from '@/lib/db/schema';
 import { sendPortfolioPublishedEmail } from '@/lib/email';
-import { userHasProAccess } from '@/lib/pro-access';
 import { portfolioSiteBasePath, validatePublicHandleForSave } from '@/lib/public-handle';
 import { normalizePublicDomain } from '@/lib/slug';
 import { sanitizePortfolioAccentForStorage } from '@/lib/portfolio-accent';
-import type { PortfolioContent } from '@/types';
+import type { PortfolioContent, PortfolioTheme } from '@/types';
 
 interface RouteContext {
   params: { id: string };
@@ -75,7 +75,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
   const body = (await req.json()) as Partial<{
     title: string;
-    theme: string;
+    theme: PortfolioTheme;
     accentColor: string | null;
     isPublished: boolean;
     content: PortfolioContent;
@@ -84,13 +84,17 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     publicHandle: string | null;
   }>;
 
-  if (body.theme !== undefined && body.theme === 'neubrutalism' && !(await userHasProAccess(userId))) {
-    return NextResponse.json({ error: 'Neubrutalism theme requires a Pro subscription' }, { status: 403 });
+  if (body.theme !== undefined) {
+    const tier = await getUserTier(userId);
+    const allowedThemes = getTierLimits(tier).themes;
+    if (!(allowedThemes as readonly string[]).includes(body.theme)) {
+      return NextResponse.json({ error: 'That theme requires a Pro subscription' }, { status: 403 });
+    }
   }
 
   const set: {
     title?: string;
-    theme?: string;
+    theme?: PortfolioTheme;
     accentColor?: string | null;
     isPublished?: boolean;
     content?: Record<string, unknown>;
@@ -138,7 +142,8 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       : null;
 
     if (next !== prev) {
-      if (next && !(await userHasProAccess(userId))) {
+      const tier = await getUserTier(userId);
+      if (next && !getTierLimits(tier).customDomain) {
         return NextResponse.json({ error: 'Custom domains require a Pro subscription' }, { status: 403 });
       }
       set.customDomain = next;

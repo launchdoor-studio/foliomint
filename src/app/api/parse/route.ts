@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 
+import { canUseAiFeature, getUserTier } from '@/lib/access';
+import { resolveParsingApiKey } from '@/lib/ai-credentials';
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { portfolios, users } from '@/lib/db/schema';
+import { aiUsageEvents, portfolios, users } from '@/lib/db/schema';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 import { extractResumeFields } from '@/lib/groq';
 import { extractTextFromFile, buildFallbackResumeData } from '@/lib/resume-parser';
-import { checkUploadLimit, recordUploadAttempt } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
@@ -48,8 +49,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const isPaid =
-      isPaymentGatingBypassed() || user.subscriptionStatus === 'active';
+    const userTier = isPaymentGatingBypassed() ? 'pro' : await getUserTier(userId);
+    const isPaid = userTier === 'pro';
 
     if (!isPaid) {
       const existingPortfolios = await db
@@ -69,16 +70,6 @@ export async function POST(request: Request) {
           { status: 403 },
         );
       }
-
-      const { allowed, remaining } = await checkUploadLimit(userId);
-      if (!allowed) {
-        return NextResponse.json(
-          {
-            error: `Daily upload limit reached (${remaining} remaining). Upgrade to Pro for unlimited parses.`,
-          },
-          { status: 429 },
-        );
-      }
     }
 
     const formData = await request.formData();
@@ -89,13 +80,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    const apiKey = consent ? await resolveParsingApiKey(userId) : null;
+
+    if (consent && !(await canUseAiFeature(userId, 'parse'))) {
+      return NextResponse.json(
+        {
+          error:
+            "You have reached today's AI parsing limit. You can still create or edit your portfolio manually, or upgrade for higher limits.",
+          code: 'AI_PARSE_LIMIT_REACHED',
+        },
+        { status: 403 },
+      );
+    }
+
+    if (consent && !apiKey) {
+      return NextResponse.json(
+        {
+          error:
+            'AI parsing requires your own Groq API key. Add one in Settings before uploading with AI enabled.',
+          code: 'AI_KEY_REQUIRED',
+        },
+        { status: 400 },
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const rawText = await extractTextFromFile(buffer, file.type);
 
     let resumeData;
-    if (consent) {
+    let aiParseSucceeded = false;
+    if (consent && apiKey) {
       try {
-        resumeData = await extractResumeFields(rawText);
+        resumeData = await extractResumeFields(rawText, apiKey);
+        aiParseSucceeded = true;
       } catch {
         resumeData = buildFallbackResumeData(rawText);
       }
@@ -117,8 +134,15 @@ export async function POST(request: Request) {
         isPaid ? null : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
     });
 
-    if (!isPaid) {
-      await recordUploadAttempt(userId);
+    if (consent) {
+      await db.insert(aiUsageEvents).values({
+        id: nanoid(12),
+        userId,
+        portfolioId,
+        kind: 'parse',
+        model: apiKey ? 'groq/compound-mini' : null,
+        succeeded: aiParseSucceeded,
+      });
     }
 
     return NextResponse.json({ portfolioId, slug });
@@ -130,4 +154,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

@@ -33,6 +33,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
   const [dragOver, setDragOver] = useState(false);
   const [consent, setConsent] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCreatingBlank, setIsCreatingBlank] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,6 +123,44 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
     setIsUploading(false);
   };
 
+  const handleCreateBlank = async () => {
+    setIsCreatingBlank(true);
+    setError(null);
+    setStatusMessage('Creating a blank portfolio canvas...');
+
+    try {
+      const res = await fetch('/api/portfolios/blank', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const message = data.error || 'Could not create portfolio';
+        if (res.status === 401 || message.toLowerCase().includes('authentication')) {
+          throw new Error('session_expired');
+        }
+        throw new Error(message);
+      }
+
+      const data = (await res.json()) as { portfolioId?: string };
+      if (!data.portfolioId) {
+        throw new Error('Server did not return a portfolio id. Please try again.');
+      }
+
+      setStatusMessage('Opening editor...');
+      router.replace(`/editor/${data.portfolioId}`);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'session_expired') {
+        setError('session_expired');
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong');
+      }
+      setStatusMessage(null);
+      setIsCreatingBlank(false);
+    }
+  };
+
   const isAuthError = error === 'session_expired';
 
   if (!isAuthed) {
@@ -129,7 +168,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
       {
         icon: LogIn,
         title: 'Sign in',
-        caption: 'GitHub or Google · no card',
+        caption: 'GitHub, Google, or LinkedIn · no card',
       },
       {
         icon: FileUp,
@@ -307,7 +346,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
 
               <Button
                 onClick={handleSubmit}
-                disabled={!file || isUploading}
+                disabled={!file || isUploading || isCreatingBlank}
                 size="lg"
                 className="w-full"
               >
@@ -320,6 +359,26 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
                     {consent ? 'Parse with AI & Generate Portfolio' : 'Generate Portfolio'}
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void handleCreateBlank()}
+                disabled={isUploading || isCreatingBlank}
+                size="lg"
+                variant="outline"
+                className="w-full"
+              >
+                {isCreatingBlank ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <LayoutTemplate className="mr-2 h-4 w-4" />
+                    Start from scratch
                   </>
                 )}
               </Button>

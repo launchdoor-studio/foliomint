@@ -22,18 +22,22 @@ export function verifyLemonSqueezyWebhookSignature(rawBody: string, secret: stri
 }
 
 /** Map Lemon Squeezy subscription `status` to our `users.subscription_status` values. */
-export function mapLemonSubscriptionStatus(lsStatus: string): 'active' | 'past_due' | 'cancelled' {
+export function mapLemonSubscriptionStatus(
+  lsStatus: string,
+): 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired' {
   switch (lsStatus) {
     case 'active':
-    case 'on_trial':
-    case 'cancelled':
       return 'active';
+    case 'on_trial':
+      return 'trialing';
+    case 'cancelled':
+      return 'cancelled';
     case 'paused':
     case 'past_due':
     case 'unpaid':
       return 'past_due';
     case 'expired':
-      return 'cancelled';
+      return 'expired';
     default:
       return 'past_due';
   }

@@ -19,47 +19,47 @@ import { Footer } from '@/components/domain/footer';
 const features = [
   {
     icon: Upload,
-    title: 'Upload Your Resume',
-    description: 'Drop your PDF or DOCX and let AI extract and structure your content.',
+    title: 'Start with raw material',
+    description: 'Upload a resume, paste text, or open a blank canvas. FolioMint turns scattered career proof into a site structure.',
   },
   {
     icon: Sparkles,
-    title: 'AI-Powered Parsing',
+    title: 'Portfolio-first AI',
     description:
-      'Optional Groq-powered mapping of experience, skills, and projects—or use basic extraction without AI.',
+      'Groq maps your resume into hero copy, projects, gaps, and section order, not just another generic resume JSON file.',
   },
   {
     icon: Palette,
-    title: 'Beautiful Themes',
-    description: 'Pick polished themes with light and dark mode support on your live site.',
+    title: 'Design beyond templates',
+    description: 'Choose a strong starting theme, then tune accent, layout, density, and public light/dark presentation.',
   },
   {
     icon: Globe,
-    title: 'Custom Domains',
-    description: 'Use your hosted URL now and connect a custom domain when you are ready.',
+    title: 'Publish before momentum dies',
+    description: 'Ship on a hosted URL immediately, then add a custom domain when the portfolio is worth pointing people to.',
   },
   {
     icon: BarChart3,
-    title: 'Analytics Dashboard',
-    description: 'Track portfolio performance with views and deeper traffic insights.',
+    title: 'Know what gets attention',
+    description: 'See views first, then unlock the deeper traffic signals that tell you where real interest is coming from.',
   },
   {
     icon: Layers,
-    title: 'Platform Integrations',
-    description: 'Link GitHub, LeetCode, Dribbble, Medium, and more from your dashboard.',
+    title: 'One link with receipts',
+    description: 'Pull together GitHub, LinkedIn, writing, design, socials, and proof-of-work links without making visitors hunt.',
   },
 ] as const;
 
 /** Homepage teaser only—tier limits stay on /pricing. */
 const productHighlights = [
-  'AI-assisted parsing from PDF, DOCX, or plain text',
-  'Guided editor with live preview',
-  'Professional themes with light & dark on your live site',
-  'Integrations hub for profiles, repos, and social links',
-  'Analytics for your published portfolio',
-  'Hosted site with a public URL you control',
-  'Markdown blog on your portfolio',
-  'Custom domain with DNS verification',
+  'Portfolio-specific AI, not generic resume parsing',
+  'Guided editor that keeps every suggestion editable',
+  'Distinct themes with public light and dark mode',
+  'Proof links for repos, writing, socials, and profiles',
+  'Analytics that show whether the portfolio is working',
+  'Hosted URL first, custom domain when you are ready',
+  'Markdown blog for proof that does not fit a resume',
+  'No-code publishing without surrendering control',
 ] as const;
 
 export function HomeMarketing() {
@@ -68,57 +68,89 @@ export function HomeMarketing() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(160_30%_80%_/_0.3),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(160_30%_20%_/_0.4),transparent)]" />
+          <div
+            className="pointer-events-none absolute left-8 top-20 hidden w-40 rotate-[-11deg] md:block"
+            aria-hidden
+          >
+            <div className="h-5 w-24 rounded-sm border-4 border-foreground bg-primary shadow-[6px_6px_0_0_hsl(var(--foreground))] dark:shadow-[6px_6px_0_0_hsl(var(--secondary))]" />
+            <div className="ml-9 mt-3 h-5 w-28 rounded-sm border-4 border-foreground bg-secondary shadow-[6px_6px_0_0_hsl(var(--foreground))] dark:shadow-[6px_6px_0_0_hsl(var(--primary))]" />
+            <div className="ml-[4.5rem] mt-3 h-5 w-20 rounded-sm border-4 border-foreground bg-card shadow-[6px_6px_0_0_hsl(var(--foreground))] dark:shadow-[6px_6px_0_0_hsl(var(--secondary))]" />
+          </div>
+          <div
+            className="pointer-events-none absolute right-8 top-24 hidden w-40 rotate-6 rounded-md border-4 border-foreground bg-card p-4 shadow-[8px_8px_0_0_hsl(var(--foreground))] dark:shadow-[8px_8px_0_0_hsl(var(--primary))] lg:block"
+            aria-hidden
+          >
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="h-3 w-16 rounded-sm bg-primary" />
+              <span className="h-3 w-8 rounded-sm bg-secondary" />
+            </div>
+            <div className="space-y-2">
+              <span className="block h-2 rounded-sm bg-foreground/70" />
+              <span className="block h-2 w-10/12 rounded-sm bg-foreground/45" />
+              <span className="block h-2 w-7/12 rounded-sm bg-foreground/30" />
+            </div>
+            <div className="mt-4 rounded-sm border-2 border-foreground px-2 py-1 text-center font-mono text-[10px] font-black uppercase tracking-[0.18em]">
+              proof
+            </div>
+          </div>
           <div className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-28 lg:px-8 lg:pt-32">
-            <div className="mx-auto max-w-3xl text-center">
+            <div className="mx-auto max-w-4xl text-center">
               <Badge variant="secondary" className="mb-6">
-                Now with Groq AI-powered parsing
+                Resume in. Proof-of-work site out.
               </Badge>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                Turn your resume into a <span className="text-primary">stunning portfolio</span>
+              <h1 className="font-display text-5xl font-black tracking-[-0.06em] sm:text-7xl lg:text-8xl">
+                Stop sending
+                <span className="block">flat resumes.</span>
+                <span className="block text-primary [text-shadow:3px_3px_0_hsl(var(--foreground))] dark:[text-shadow:3px_3px_0_hsl(var(--background))]">
+                  Mint proof.
+                </span>
               </h1>
-              <p className="mt-6 text-lg leading-8 text-muted-foreground sm:text-xl">
-                Upload your resume, optionally use AI to structure your content, customize in the editor, and publish a
-                professional site.
+              <p className="mx-auto mt-6 max-w-2xl text-balance text-lg font-semibold leading-8 text-foreground/80 sm:text-xl">
+                FolioMint turns your resume into a live, editable proof-of-work site: sharper than a template builder,
+                faster than a personal-site rebuild, and more convincing than a PDF attachment.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button asChild size="xl">
                   <Link href="/generate">
-                    Get Started
+                    Mint My Portfolio
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="xl">
-                  <Link href="/pricing">View Pricing</Link>
+                  <Link href="/pricing">Compare Free vs Pro</Link>
                 </Button>
+              </div>
+              <div className="mx-auto mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
+                {['No credit card', 'Hosted instantly', 'Every word editable'].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-md border-2 border-foreground bg-card px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.12em] shadow-[4px_4px_0_0_hsl(var(--foreground))] dark:shadow-[4px_4px_0_0_hsl(var(--primary))]"
+                  >
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="border-t bg-muted/30 py-24 sm:py-32">
+        <section className="border-y-2 border-foreground bg-muted/70 py-24 sm:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Everything you need to stand out
+                Built to beat the blank-page problem
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                From upload to deployment, we handle the heavy lifting so you can focus on your
-                career.
+                FolioMint does the hard first pass, then gives you the controls to make it sound and look like you.
               </p>
             </div>
             <div className="mx-auto mt-16 grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((feature) => (
-                <Card
-                  key={feature.title}
-                  className="border-0 bg-background shadow-md transition-shadow hover:shadow-lg"
-                >
+                <Card key={feature.title} className="bg-background">
                   <CardHeader>
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <feature.icon className="h-5 w-5 text-primary" />
+                    <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-md border-2 border-foreground bg-primary text-primary-foreground shadow-[3px_3px_0_0_hsl(var(--foreground))]">
+                      <feature.icon className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-lg">{feature.title}</CardTitle>
                   </CardHeader>
@@ -143,19 +175,19 @@ export function HomeMarketing() {
               {[
                 {
                   step: '01',
-                  title: 'Upload',
-                  description: 'Drop your resume (PDF, DOCX, or plain text) and consent to AI parsing.',
+                  title: 'Feed the mint',
+                  description: 'Upload a resume, paste text, or start blank. The app builds the first usable portfolio shape.',
                 },
                 {
                   step: '02',
-                  title: 'Edit & Customize',
+                  title: 'Sharpen the proof',
                   description:
-                    'Review AI-extracted content, fine-tune in the form editor, pick a theme.',
+                    'Edit every AI suggestion, reorder sections, tune the headline, and pick a theme that fits your work.',
                 },
                 {
                   step: '03',
-                  title: 'Deploy',
-                  description: 'Publish your portfolio instantly, then keep refining it as you grow.',
+                  title: 'Publish the signal',
+                  description: 'Share a hosted URL immediately, then add analytics, a blog, and a custom domain when ready.',
                 },
               ].map((item) => (
                 <div key={item.step} className="text-center">
@@ -179,11 +211,11 @@ export function HomeMarketing() {
                   Pricing
                 </Badge>
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Straightforward plans that scale with you
+                  Free to prove it, Pro to grow it
                 </h2>
                 <p className="mt-4 text-lg text-muted-foreground">
-                  Everything you need to go from resume to a live portfolio—parsing, editing, hosting, and growth
-                  tools. Compare plans anytime for limits and add-ons.
+                  The free tier is enough to publish a real portfolio. Pro adds the power features that cost money to run:
+                  more AI, more sites, domains, blog, and deeper analytics.
                 </p>
                 <div className="mt-8">
                   <Button asChild size="lg">
@@ -197,7 +229,7 @@ export function HomeMarketing() {
               <Card className="p-8">
                 <div className="mb-7">
                   <p className="font-display text-xl font-semibold leading-snug tracking-tight text-foreground">
-                    What FolioMint offers
+                    Why FolioMint has the upper hand
                   </p>
                 </div>
                 <ul className="space-y-4 font-sans">
@@ -225,15 +257,15 @@ export function HomeMarketing() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Ready to mint your portfolio?
+                Your resume says what happened. Your portfolio proves it.
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Sign in, upload, and ship a first version in minutes. Scale up when you need more.
+                Start with what you already have, publish something credible, and keep improving it as your work gets better.
               </p>
               <div className="mt-10">
                 <Button asChild size="xl">
                   <Link href="/generate">
-                    Create Your Portfolio
+                    Mint Your Proof
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

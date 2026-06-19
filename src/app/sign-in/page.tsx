@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
-import { Github } from 'lucide-react';
+import { Github, Linkedin } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,6 +88,15 @@ export default function SignInPage() {
                 />
               </svg>
               Continue with Google
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              size="lg"
+              onClick={() => signIn('linkedin', { callbackUrl })}
+            >
+              <Linkedin className="mr-2 h-5 w-5" />
+              Continue with LinkedIn
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               By signing in, you agree to our{' '}

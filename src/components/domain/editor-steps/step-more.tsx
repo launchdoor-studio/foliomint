@@ -10,9 +10,57 @@ import type { EditorStepContext } from '@/components/domain/editor-step-context'
 export function EditorStepMore(ctx: EditorStepContext) {
   const { updateContent, monoInput, monoTextarea, editorRepeatItemClass } = ctx;
   const content = ctx.state.content;
+  const suggestions = content?.portfolioSuggestions;
+  const hasSuggestions = Boolean(
+    suggestions?.heroTagline ||
+      suggestions?.bioVariants?.length ||
+      suggestions?.missingFields?.length ||
+      suggestions?.recommendedSectionOrder?.length,
+  );
 
   return (
     <div className="space-y-6">
+      {hasSuggestions && (
+        <EditorFormPanel title="AI portfolio suggestions">
+          <div className="space-y-5 font-mono text-sm">
+            {suggestions?.heroTagline && (
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Hero tagline
+                </p>
+                <p className="mt-2 rounded-lg border bg-muted/30 p-3">{suggestions.heroTagline}</p>
+              </div>
+            )}
+            {suggestions?.missingFields && suggestions.missingFields.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Add before publishing
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                  {suggestions.missingFields.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {suggestions?.bioVariants && suggestions.bioVariants.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Bio options
+                </p>
+                <div className="mt-2 space-y-2">
+                  {suggestions.bioVariants.map((item) => (
+                    <p key={item} className="rounded-lg border bg-background p-3 text-muted-foreground">
+                      {item}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </EditorFormPanel>
+      )}
+
       <EditorFormPanel
         title="Awards"
         actions={

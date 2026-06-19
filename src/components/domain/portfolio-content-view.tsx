@@ -158,6 +158,11 @@ export function PortfolioContentView({
               <h1 className="text-[clamp(1.75rem,3.5vw+0.5rem,3.25rem)] font-semibold uppercase leading-[1.08] tracking-[0.06em] text-zinc-950 dark:text-zinc-50">
                 {content.name || slug}
               </h1>
+              {content.headline && (
+                <p className="max-w-2xl text-pretty text-lg font-semibold leading-snug text-zinc-900 dark:text-zinc-100 sm:text-xl">
+                  {content.headline}
+                </p>
+              )}
               {content.bio && (
                 <p className="max-w-2xl text-pretty text-base font-medium leading-relaxed text-zinc-600 dark:text-zinc-300 sm:text-lg md:text-xl">
                   {content.bio}

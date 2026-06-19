@@ -249,6 +249,11 @@ export function PortfolioClassicMonoView({
             >
               {displayName}
             </h1>
+            {content.headline ? (
+              <p className="max-w-xl text-base font-semibold leading-relaxed text-zinc-700 dark:text-zinc-300 sm:text-lg">
+                {content.headline}
+              </p>
+            ) : null}
             {content.location ? (
               <p className="flex items-center gap-2 text-sm text-zinc-500">
                 <MapPin className="h-4 w-4 shrink-0" />

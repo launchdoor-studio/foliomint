@@ -2,7 +2,7 @@
 
 Thanks for your interest in FolioMint. Whether you are fixing a typo, reporting a bug, or opening a pull request, you are welcome here.
 
-This guide covers how to run the app locally and how the repo is organized. If something is unclear, opening an issue with your question is completely fine. For production and deferred setup items, see [TODO.md](./TODO.md).
+This guide covers how to run the app locally and how the repo is organized. Product direction and BYOK AI model: [SPEC.md](./SPEC.md). Implementation tasks: [TODO.md](./TODO.md).
 
 ## Before you start
 
@@ -15,14 +15,14 @@ This guide covers how to run the app locally and how the repo is organized. If s
 - **Database**: Turso (libSQL) in production, SQLite locally
 - **ORM**: Drizzle ORM
 - **Styling**: Tailwind CSS and CSS variables for theming
-- **Auth**: NextAuth v5 (GitHub, Google)
+- **Auth**: Auth.js/NextAuth v5 (GitHub, Google/Gmail, LinkedIn)
 - **Forms**: React Hook Form and Zod
 - **State**: Zustand
-- **AI parsing**: Groq API (LLaMA 3.1)
-- **Payments**: Lemon Squeezy Checkout and webhooks
+- **AI parsing**: Groq with encrypted BYOK support and tiered platform limits
+- **Payments**: Lemon Squeezy monthly subscriptions, Checkout, and webhooks
 - **Emails**: Resend (optional, for portfolio publish notifications)
 - **Blog**: Markdown posts per portfolio
-- **Themes**: Classic and Neubrutalism on public portfolios
+- **Themes**: End-to-end neubrutalism in the app, with flexible public portfolio themes
 - **Integrations**: Profile links (GitHub, LinkedIn, and more) on the published site
 - **Custom domains**: DNS TXT verification in the app; host routing is wired at deploy time
 
@@ -30,8 +30,9 @@ This guide covers how to run the app locally and how the repo is organized. If s
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local: at minimum GROQ_API_KEY, NEXTAUTH_SECRET, and database URL
-# Optional OAuth: AUTH_GITHUB_ID, AUTH_GITHUB_SECRET (or NEXTAUTH_DEV_BYPASS=true for local-only)
+# Edit .env.local: at minimum NEXTAUTH_SECRET and database URL
+# Optional dev-only: GROQ_API_KEY (platform key for local testing without BYOK setup)
+# Optional OAuth: AUTH_GITHUB_ID, AUTH_GOOGLE_ID, AUTH_LINKEDIN_ID (or NEXTAUTH_DEV_BYPASS=true)
 # BYPASS_PAYMENT_GATING=true in .env.example helps local dev without Lemon Squeezy
 
 npm install
@@ -46,7 +47,6 @@ If `db:push` or `dev` fails, check the error message first, then that your Node 
 ```
 src/
 ├── app/                  # Next.js App Router pages
-│   ├── (auth)/           # Auth-gated routes
 │   ├── api/              # Route handlers (webhooks, parse)
 │   ├── dashboard/        # User dashboard
 │   ├── editor/           # Portfolio editor
@@ -54,15 +54,16 @@ src/
 │   ├── pricing/          # Pricing page
 │   ├── sign-in/          # Authentication
 │   ├── u/                # Public portfolios by handle (/u/{handle})
-│   └── [slug]/           # Legacy / public portfolio viewer
+│   └── [slug]/           # Legacy public route redirect/viewer
 ├── components/
 │   ├── domain/           # Business-specific components
 │   └── ui/               # Generic UI primitives
 ├── lib/
 │   ├── db/               # Drizzle schema + client
 │   ├── auth.ts           # NextAuth configuration
-│   ├── groq.ts           # Groq AI integration
-│   ├── rate-limit.ts     # Upload rate limiting
+│   ├── groq.ts           # Groq AI integration (BYOK)
+│   ├── ai-credentials.ts # User AI key storage
+│   ├── ai-key-encryption.ts
 │   ├── resume-parser.ts  # PDF/DOCX text extraction
 │   ├── errors.ts         # Typed error classes
 │   └── utils.ts          # Shared utilities

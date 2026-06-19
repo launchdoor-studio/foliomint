@@ -20,7 +20,7 @@ export function Logo({ className, size = 32, showText = true }: LogoProps) {
         className="h-auto"
         priority
       />
-      {showText && <span className="text-xl font-bold tracking-tight">FolioMint</span>}
+      {showText && <span className="font-display text-xl font-black tracking-tight">FolioMint</span>}
     </Link>
   );
 }

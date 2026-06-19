@@ -3,23 +3,14 @@ import Groq from 'groq-sdk';
 import { ParseError } from '@/lib/errors';
 import { resumeDataSchema, type ResumeData } from '@/types';
 
-let groqClient: Groq | null = null;
-
-function getGroqClient(): Groq {
-  if (!process.env.GROQ_API_KEY) {
-    throw new ParseError('Resume parsing is not available right now. Please try again later.');
-  }
-  if (!groqClient) {
-    groqClient = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  }
-  return groqClient;
-}
-
 function buildExtractionPrompt(rawText: string): string {
-  return `You are a resume parser. Extract structured data from the following resume text and return ONLY valid JSON matching this schema:
+  return `You are FolioMint's portfolio intake engine. Your job is not to make a generic resume JSON dump; it is to extract reliable facts and shape them into editable portfolio content.
+
+Return ONLY valid JSON matching this schema:
 
 {
   "name": "string",
+  "headline": "string or null (role/title/value proposition for a portfolio hero)",
   "profileImageUrl": "string or null",
   "email": "string or null",
   "phone": "string or null",
@@ -36,7 +27,13 @@ function buildExtractionPrompt(rawText: string): string {
   "languages": ["string"] or omit,
   "awards": ["string"] or omit,
   "extracurricular": [{"title": "string", "bullets": ["string"]}] or omit,
-  "otherSections": [{"title": "string", "bullets": ["string"]}] or omit
+  "otherSections": [{"title": "string", "bullets": ["string"]}] or omit,
+  "portfolioSuggestions": {
+    "heroTagline": "string or null",
+    "bioVariants": ["2-3 concise first-person or neutral bio options"],
+    "missingFields": ["specific fields the user should add manually"],
+    "recommendedSectionOrder": ["profile", "projects", "experience", "skills", "education", "other"]
+  }
 }
 
 Rules:
@@ -49,16 +46,23 @@ Rules:
 - Do NOT use a project/product/company URL as "website" unless the resume explicitly states it is the person's site.
 - If a URL belongs to a specific project, place it in that project's "url" field instead.
 - If "website" is ambiguous, return null.
-- Map all section headings semantically (e.g., "Work History" → experience, "Technical Skills" → skills)
+- Map all section headings semantically (e.g., "Work History" -> experience, "Technical Skills" -> skills)
 - Normalize dates to readable formats (e.g., "Jan 2023", "2023")
 - Keep bullet points concise
 - If a section is missing, use empty arrays
+- HEADLINE: Derive a concise portfolio headline from the strongest evidence: current role, target role, seniority, domain, or skill cluster. Do not invent a job title that conflicts with the resume.
+- BIO: Keep "bio" as a polished 2-4 sentence professional summary suitable for a portfolio homepage. If the resume summary is weak, improve wording without adding unsupported claims.
+- HERO TAGLINE: Make it shorter and punchier than bio, suitable below a hero heading.
 - PROJECTS (critical): For EVERY project, you MUST populate "bullets" with one entry per bullet line from the resume. Do not merge multiple bullets into "description".
 - PROJECTS: "description" is optional — at most ONE short sentence (or null). Never paste an entire bullet list into "description".
 - PROJECTS: Put stack/tech keywords in "technologies" only when the resume lists them as technologies for that project; otherwise omit "technologies".
+- PROJECTS: Prefer surfacing project impact, stack, links, and ownership because portfolios are often judged from projects first.
+- EXPERIENCE: Preserve measurable impact, scope, and technologies. Rewrite only for clarity; do not inflate numbers.
 - AWARDS: Map sections titled Awards, Honors, Achievements, Recognition to "awards" as a flat list of strings.
 - EXTRACURRICULAR: Map sections titled Extracurricular, Activities, Leadership, Volunteering (when not a job) to "extracurricular" as subsections: each subsection has its own "title" and "bullets".
 - OTHER SECTIONS: If the resume has a labeled section that does not fit above (e.g., Publications, Patents, Volunteer, Courses), put it in "otherSections" as {"title": "<section heading>", "bullets": [...]}. Prefer first-class fields when obvious.
+- MISSING FIELDS: Include only actionable gaps that matter for a public portfolio, such as missing project links, missing headline, missing GitHub/LinkedIn, weak bio, or no measurable impact.
+- RECOMMENDED SECTION ORDER: Choose the order that best markets this person. For students and builders, projects often come before experience. For experienced professionals, experience often comes before projects.
 - Return ONLY the JSON object, no extra text
 
 Resume text:
@@ -86,8 +90,6 @@ function sanitizeWebsiteField(data: Record<string, unknown>, rawText: string): R
     return data;
   }
 
-  // If the same URL appears as a project URL and there is no explicit "website/homepage/portfolio" cue near it,
-  // prefer leaving website empty to avoid misclassifying project links as personal websites.
   const escapedWebsite = website.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const websitePattern = new RegExp(
     `(website|portfolio|homepage|personal\\s+site|blog)\\s*[:\\-]?\\s*${escapedWebsite}`,
@@ -126,8 +128,19 @@ function normalizeProjectBullets(data: Record<string, unknown>): Record<string, 
   return data;
 }
 
-export async function extractResumeFields(rawText: string): Promise<ResumeData> {
-  const groq = getGroqClient();
+/** Validate a Groq API key with a lightweight models list call. */
+export async function validateGroqApiKey(apiKey: string): Promise<boolean> {
+  const groq = new Groq({ apiKey: apiKey.trim() });
+  try {
+    await groq.models.list();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function extractResumeFields(rawText: string, apiKey: string): Promise<ResumeData> {
+  const groq = new Groq({ apiKey });
   const prompt = buildExtractionPrompt(rawText);
 
   try {
@@ -151,10 +164,17 @@ export async function extractResumeFields(rawText: string): Promise<ResumeData> 
   } catch (error) {
     if (error instanceof ParseError) throw error;
 
-    if (error instanceof Groq.APIError && error.status === 429) {
-      throw new ParseError(
-        'AI parsing is temporarily unavailable due to rate limits. Your resume text has been saved for manual editing.',
-      );
+    if (error instanceof Groq.APIError) {
+      if (error.status === 401 || error.status === 403) {
+        throw new ParseError(
+          'Your Groq API key was rejected. Check the key in Settings and try again.',
+        );
+      }
+      if (error.status === 429) {
+        throw new ParseError(
+          'Your Groq account rate limit was reached. Your resume text is available for manual editing.',
+        );
+      }
     }
 
     throw new ParseError(

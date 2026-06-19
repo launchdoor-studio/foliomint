@@ -24,7 +24,7 @@ export function Navbar() {
   const isSignedIn = status === 'authenticated' && session?.user;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-foreground bg-background/90 backdrop-blur-lg">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
 
@@ -33,7 +33,7 @@ export function Navbar() {
             <>
               <Link
                 href="/dashboard"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
               >
                 Dashboard
               </Link>
@@ -46,7 +46,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
               >
                 {link.label}
               </Link>
@@ -58,7 +58,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((o) => !o)}
-                className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="flex items-center gap-2 rounded-md border-2 border-foreground bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 {session.user?.image ? (
                   <Image
@@ -66,10 +66,10 @@ export function Navbar() {
                     alt={session.user?.name ?? 'Account'}
                     width={32}
                     height={32}
-                    className="rounded-full"
+                    className="rounded-sm"
                   />
                 ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-primary text-sm font-bold text-primary-foreground">
                     {session.user?.name?.[0] ?? session.user?.email?.[0] ?? '?'}
                   </span>
                 )}
@@ -81,8 +81,8 @@ export function Navbar() {
                     aria-hidden
                     onClick={() => setUserMenuOpen(false)}
                   />
-                  <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-md border bg-popover py-1 shadow-lg">
-                    <div className="border-b px-3 py-2">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-md border-2 border-foreground bg-popover py-1 shadow-[6px_6px_0_0_hsl(var(--foreground))] dark:shadow-[6px_6px_0_0_hsl(var(--primary))]">
+                    <div className="border-b-2 border-foreground px-3 py-2">
                       <p className="truncate text-sm font-medium">{session.user?.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {session.user?.email}

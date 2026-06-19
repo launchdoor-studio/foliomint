@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
-
+import { getTierLimits, getUserTier } from '@/lib/access';
+import { getAiKeyStatus, resolveDevGroqApiKey } from '@/lib/ai-credentials';
 import { getCurrentUser } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 
 export const dynamic = 'force-dynamic';
@@ -16,20 +14,29 @@ export async function GET() {
 
   const userId = appUser?.id ?? 'dev-user';
 
+  const aiStatus = await getAiKeyStatus(userId);
+  const aiConfigured = aiStatus.configured || resolveDevGroqApiKey() !== null;
+
   if (isPaymentGatingBypassed()) {
-    return NextResponse.json({ tier: 'pro' as const, email: appUser?.email ?? 'dev@example.com' });
+    const tier = 'pro' as const;
+    return NextResponse.json({
+      tier,
+      limits: getTierLimits(tier),
+      email: appUser?.email ?? 'dev@example.com',
+      aiConfigured,
+      aiProvider: aiStatus.provider,
+      aiKeyHint: aiStatus.hint,
+    });
   }
 
-  const row = await db
-    .select({ subscriptionStatus: users.subscriptionStatus })
-    .from(users)
-    .where(eq(users.id, userId))
-    .get();
-
-  const tier = row?.subscriptionStatus === 'active' ? ('pro' as const) : ('free' as const);
+  const tier = await getUserTier(userId);
 
   return NextResponse.json({
     tier,
+    limits: getTierLimits(tier),
     email: appUser?.email ?? null,
+    aiConfigured,
+    aiProvider: aiStatus.provider,
+    aiKeyHint: aiStatus.hint,
   });
 }

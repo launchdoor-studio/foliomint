@@ -2,9 +2,13 @@
   "name": "foliomint",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "app": "bash scripts/run-app.sh",
     "dev": "WATCHPACK_POLLING=true next dev",
-    "build": "npm run db:push && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

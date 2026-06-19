@@ -96,6 +96,19 @@ export function EditorStepProfile(ctx: EditorStepContext) {
               />
             </EditorField>
             <EditorField
+              id="editor-headline"
+              label="Headline"
+              hint="A concise role or value proposition for the top of your portfolio."
+            >
+              <Input
+                id="editor-headline"
+                value={content.headline ?? ''}
+                onChange={(e) => updateContent((c) => ({ ...c, headline: e.target.value || undefined }))}
+                placeholder="Product designer building clear, useful systems"
+                className={monoInput()}
+              />
+            </EditorField>
+            <EditorField
               id="editor-profile-image"
               label="Profile image URL"
               hint="Square photo works best. Paste a direct image link (https://…)."

@@ -1,4 +1,8 @@
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+type SubscriptionStatus = 'free' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
+type PortfolioStatus = 'draft' | 'published' | 'unpublished' | 'archived';
+type PortfolioTheme = 'classic' | 'neubrutalism' | 'editorial' | 'minimal' | 'terminal';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -6,14 +10,21 @@ export const users = sqliteTable('users', {
   email: text('email').unique().notNull(),
   emailVerified: integer('email_verified', { mode: 'timestamp' }),
   image: text('image'),
-  subscriptionStatus: text('subscription_status').default('free').notNull(),
-  /** Lemon Squeezy customer id (legacy column name from initial Stripe schema). */
-  lemonSqueezyCustomerId: text('stripe_customer_id'),
-  /** Lemon Squeezy subscription id (legacy column name from initial Stripe schema). */
-  lemonSqueezySubscriptionId: text('stripe_subscription_id'),
+  subscriptionStatus: text('subscription_status').$type<SubscriptionStatus>().default('free').notNull(),
+  lemonSqueezyCustomerId: text('lemon_squeezy_customer_id'),
+  lemonSqueezySubscriptionId: text('lemon_squeezy_subscription_id'),
+  lemonSqueezyVariantId: text('lemon_squeezy_variant_id'),
+  subscriptionRenewsAt: integer('subscription_renews_at', { mode: 'timestamp' }),
+  subscriptionEndsAt: integer('subscription_ends_at', { mode: 'timestamp' }),
+  trialEndsAt: integer('trial_ends_at', { mode: 'timestamp' }),
+  onboardingCompletedAt: integer('onboarding_completed_at', { mode: 'timestamp' }),
   preferences: text('preferences', { mode: 'json' })
-    .$type<{ theme: 'light' | 'dark' | 'system' }>()
-    .default({ theme: 'system' }),
+    .$type<{
+      theme: 'light' | 'dark' | 'system';
+      defaultPortfolioTheme?: PortfolioTheme;
+      defaultPortfolioAccent?: string;
+    }>()
+    .default({ theme: 'system', defaultPortfolioTheme: 'neubrutalism' }),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -63,23 +74,38 @@ export const portfolios = sqliteTable(
     /** Optional clean public path segment: site is /u/{publicHandle} when set (unique among non-null rows). */
     publicHandle: text('public_handle'),
     title: text('title').notNull(),
-  content: text('content', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
-  theme: text('theme').default('classic').notNull(),
-  /** Hex accent for public portfolio (links, chips, markers). Default applied in UI when null. */
-  accentColor: text('accent_color'),
-  isPublished: integer('is_published', { mode: 'boolean' }).default(false).notNull(),
-  groqConsent: integer('groq_consent', { mode: 'boolean' }).default(false).notNull(),
-  customDomain: text('custom_domain'),
-  domainVerificationToken: text('domain_verification_token'),
-  /** Null for rows created before this column existed; treat as false in app code. */
-  customDomainVerified: integer('custom_domain_verified', { mode: 'boolean' }),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }),
-  createdAt: integer('created_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' })
-    .notNull()
-    .$defaultFn(() => new Date()),
+    status: text('status').$type<PortfolioStatus>().default('draft').notNull(),
+    content: text('content', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    theme: text('theme').$type<PortfolioTheme>().default('neubrutalism').notNull(),
+    themeSettings: text('theme_settings', { mode: 'json' })
+      .$type<{
+        palette?: string;
+        fontPair?: string;
+        density?: 'compact' | 'comfortable' | 'spacious';
+        borderStyle?: 'soft' | 'bold' | 'poster';
+        heroStyle?: 'stacked' | 'split' | 'editorial' | 'cards';
+      }>()
+      .default({ palette: 'mint-orange', density: 'comfortable', borderStyle: 'bold', heroStyle: 'cards' }),
+    /** Hex accent for public portfolio (links, chips, markers). Default applied in UI when null. */
+    accentColor: text('accent_color'),
+    seoTitle: text('seo_title'),
+    seoDescription: text('seo_description'),
+    isPublished: integer('is_published', { mode: 'boolean' }).default(false).notNull(),
+    publishedAt: integer('published_at', { mode: 'timestamp' }),
+    unpublishedAt: integer('unpublished_at', { mode: 'timestamp' }),
+    groqConsent: integer('groq_consent', { mode: 'boolean' }).default(false).notNull(),
+    customDomain: text('custom_domain'),
+    domainVerificationToken: text('domain_verification_token'),
+    /** Null for rows created before this column existed; treat as false in app code. */
+    customDomainVerified: integer('custom_domain_verified', { mode: 'boolean' }),
+    customDomainRequestedAt: integer('custom_domain_requested_at', { mode: 'timestamp' }),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (t) => ({
     publicHandleUnq: uniqueIndex('portfolios_public_handle_unq').on(t.publicHandle),
@@ -112,6 +138,54 @@ export const uploadAttempts = sqliteTable('upload_attempts', {
     .references(() => users.id, { onDelete: 'cascade' }),
   lastAttempt: integer('last_attempt', { mode: 'timestamp' }).notNull(),
   count24h: integer('count_24h').default(0).notNull(),
+});
+
+export const aiUsageEvents = sqliteTable(
+  'ai_usage_events',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    portfolioId: text('portfolio_id').references(() => portfolios.id, { onDelete: 'set null' }),
+    kind: text('kind').$type<'parse' | 'rewrite' | 'suggestion'>().notNull(),
+    provider: text('provider').notNull().default('groq'),
+    model: text('model'),
+    inputTokens: integer('input_tokens').default(0).notNull(),
+    outputTokens: integer('output_tokens').default(0).notNull(),
+    succeeded: integer('succeeded', { mode: 'boolean' }).default(true).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    userKindCreatedAtIdx: index('ai_usage_events_user_kind_created_at_idx').on(t.userId, t.kind, t.createdAt),
+  }),
+);
+
+export const paymentWebhookEvents = sqliteTable('payment_webhook_events', {
+  id: text('id').primaryKey(),
+  provider: text('provider').notNull().default('lemonsqueezy'),
+  eventName: text('event_name').notNull(),
+  processedAt: integer('processed_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+/** BYOK: one AI provider credential per user (encrypted at rest). */
+export const userAiCredentials = sqliteTable('user_ai_credentials', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  provider: text('provider').notNull().default('groq'),
+  encryptedKey: text('encrypted_key').notNull(),
+  keyHint: text('key_hint').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
 export const viewLogs = sqliteTable('view_logs', {

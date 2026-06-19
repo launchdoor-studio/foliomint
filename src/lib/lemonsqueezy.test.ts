@@ -5,12 +5,12 @@ import { mapLemonSubscriptionStatus, verifyLemonSqueezyWebhookSignature } from '
 describe('mapLemonSubscriptionStatus', () => {
   it('maps active-like statuses', () => {
     expect(mapLemonSubscriptionStatus('active')).toBe('active');
-    expect(mapLemonSubscriptionStatus('on_trial')).toBe('active');
-    expect(mapLemonSubscriptionStatus('cancelled')).toBe('active');
+    expect(mapLemonSubscriptionStatus('on_trial')).toBe('trialing');
+    expect(mapLemonSubscriptionStatus('cancelled')).toBe('cancelled');
   });
 
   it('maps expired', () => {
-    expect(mapLemonSubscriptionStatus('expired')).toBe('cancelled');
+    expect(mapLemonSubscriptionStatus('expired')).toBe('expired');
   });
 });
 

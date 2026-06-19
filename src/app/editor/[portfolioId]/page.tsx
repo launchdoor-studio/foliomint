@@ -25,6 +25,14 @@ import { cn } from '@/lib/utils';
 import type { EditorPageState } from '@/types/editor-page';
 import type { PortfolioContent } from '@/types';
 
+const PORTFOLIO_THEME_LABELS: Record<string, string> = {
+  classic: 'Classic mono',
+  minimal: 'Minimal',
+  neubrutalism: 'Neubrutalism',
+  editorial: 'Editorial',
+  terminal: 'Terminal',
+};
+
 export default function EditorPage() {
   const params = useParams<{ portfolioId: string }>();
   const router = useRouter();
@@ -191,8 +199,8 @@ export default function EditorPage() {
           <CardHeader className="shrink-0 space-y-1 border-b border-border/60 bg-background/80 pb-4 dark:border-white/10">
             <CardTitle className={editorCardTitleClass}>Live preview</CardTitle>
             <p className="font-sans text-xs text-muted-foreground">
-              Updates as you type. Theme: {state.theme === 'neubrutalism' ? 'Neubrutalism' : 'Classic'} — matches what
-              visitors see (they can switch light/dark on the published site).
+              Updates as you type. Theme: {PORTFOLIO_THEME_LABELS[state.theme] ?? state.theme} — matches what visitors
+              see (they can switch light/dark on the published site).
             </p>
           </CardHeader>
           <CardContent className="relative min-h-0 flex-1 overflow-y-auto bg-background px-4 py-4 sm:px-5">
@@ -268,14 +276,19 @@ export default function EditorPage() {
               <label className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
                 Theme
                 <select
-                  className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                  className="h-8 rounded-md border-2 border-input bg-background px-2 font-mono text-xs font-bold uppercase tracking-[0.08em]"
                   value={state.theme}
                   onChange={(e) => void handleSave({ theme: e.target.value })}
                   disabled={saving}
                 >
-                  <option value="classic">Classic</option>
-                  <option value="neubrutalism" disabled={tier === 'free'}>
-                    Neubrutalism (Pro)
+                  <option value="neubrutalism">Neubrutalism</option>
+                  <option value="classic">Classic mono</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="editorial" disabled={tier === 'free'}>
+                    Editorial (Pro)
+                  </option>
+                  <option value="terminal" disabled={tier === 'free'}>
+                    Terminal (Pro)
                   </option>
                 </select>
               </label>

@@ -81,10 +81,17 @@ export function buildFallbackResumeData(rawText: string): ResumeData {
 
   return {
     name: nameCandidate || 'Unknown',
+    headline: undefined,
     skills: [],
     experience: [],
     education: [],
     projects: [],
     bio: rawText.slice(0, 500),
+    portfolioSuggestions: {
+      heroTagline: undefined,
+      bioVariants: [],
+      missingFields: ['Review imported text', 'Add projects', 'Add social links'],
+      recommendedSectionOrder: ['profile', 'experience', 'projects', 'skills', 'education'],
+    },
   };
 }
