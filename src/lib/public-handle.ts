@@ -8,6 +8,7 @@ const RESERVED = new Set([
   'signin',
   'pricing',
   'generate',
+  'preview',
   'admin',
   'www',
   'settings',

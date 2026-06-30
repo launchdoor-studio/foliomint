@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ArrowLeft, Settings } from 'lucide-react';
 
-import { getCurrentUser } from '@/lib/auth';
+import { AiKeySettings } from '@/components/domain/ai-key-settings';
 import { Navbar } from '@/components/domain/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCurrentUser } from '@/lib/auth';
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -32,11 +33,13 @@ export default async function SettingsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-              <p className="mt-1 text-muted-foreground">Account and billing shortcuts.</p>
+              <p className="mt-1 text-muted-foreground">Account, AI parsing, and billing.</p>
             </div>
           </div>
 
-          <Card className="mt-8">
+          <AiKeySettings />
+
+          <Card className="mt-4">
             <CardHeader>
               <CardTitle className="text-lg">Billing</CardTitle>
               <CardDescription>

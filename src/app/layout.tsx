@@ -52,9 +52,9 @@ export const metadata: Metadata = {
       'Turn resume raw material into a hosted proof-of-work portfolio you can edit, publish, and grow.',
   },
   icons: {
-    icon: [{ url: '/logo.svg', type: 'image/svg+xml' }],
-    shortcut: ['/logo.svg'],
-    apple: ['/logo.svg'],
+    icon: [{ url: '/new-logo.png', type: 'image/png' }],
+    shortcut: ['/new-logo.png'],
+    apple: ['/new-logo.png'],
   },
 };
 

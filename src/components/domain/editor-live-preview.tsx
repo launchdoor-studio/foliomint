@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 
 import { PortfolioClassicMonoView } from '@/components/domain/portfolio-classic-mono-view';
+import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
 import { PortfolioPublicShell } from '@/components/domain/portfolio-public-shell';
+import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
 import { cn, normalizeOutboundHref } from '@/lib/utils';
 import {
   PORTFOLIO_CARD_PAD,
@@ -16,7 +19,37 @@ import {
   portfolioSkillChipClass,
 } from '@/lib/portfolio-public-ui';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
+import type { SocialLink } from '@/lib/social-links';
 import type { PortfolioContent } from '@/types';
+
+function PreviewSiteLink({
+  isPublished,
+  portfolioId,
+  siteBasePath,
+  className,
+}: {
+  isPublished: boolean;
+  portfolioId: string;
+  siteBasePath: string;
+  className?: string;
+}) {
+  const href = isPublished ? siteBasePath : `/preview/${portfolioId}`;
+  const label = isPublished ? 'Open published site' : 'Preview draft';
+
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'font-bold text-[var(--portfolio-accent)] underline decoration-2 underline-offset-4 hover:opacity-90',
+        className,
+      )}
+    >
+      {label}
+    </Link>
+  );
+}
 
 function parsePortfolioDate(value?: string | null): number {
   if (!value) return Number.NEGATIVE_INFINITY;
@@ -77,16 +110,23 @@ function NeubrutalismPreview({
   slug,
   siteBasePath,
   narrowLayout,
+  isPublished,
+  portfolioId,
+  socialLinks = [],
 }: {
   content: PortfolioContent;
   slug: string;
   siteBasePath: string;
   narrowLayout?: boolean;
+  isPublished: boolean;
+  portfolioId: string;
+  socialLinks?: SocialLink[];
 }) {
   const neu = true;
   const sortedExperience = sortExperienceMostRecentFirst(content.experience ?? []);
   const displayName = content.name?.trim() || slug;
   const initial = displayName.charAt(0).toUpperCase() || '?';
+  const profileLinks = buildPortfolioProfileLinks(content, socialLinks);
   const card = portfolioCardClass(neu);
   const pad = PORTFOLIO_CARD_PAD;
 
@@ -139,6 +179,15 @@ function NeubrutalismPreview({
                 {content.bio}
               </p>
             )}
+            {content.location ? (
+              <p className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                {content.location}
+              </p>
+            ) : null}
+            {profileLinks.length > 0 ? (
+              <PortfolioProfileLinkButtons links={profileLinks} neu className="pt-1" />
+            ) : null}
           </div>
         </div>
       </header>
@@ -287,12 +336,11 @@ function NeubrutalismPreview({
       </div>
 
       <p className="mt-8 border-t border-zinc-200 pt-4 text-center text-[10px] uppercase tracking-[0.14em] text-zinc-600 dark:border-zinc-700 dark:text-zinc-500">
-        <Link
-          href={siteBasePath}
-          className="font-bold text-[var(--portfolio-accent)] underline decoration-2 underline-offset-4 hover:opacity-90"
-        >
-          Open published site
-        </Link>
+        <PreviewSiteLink
+          isPublished={isPublished}
+          portfolioId={portfolioId}
+          siteBasePath={siteBasePath}
+        />
       </p>
     </div>
   );
@@ -304,12 +352,18 @@ export function EditorLivePreview({
   publicHandle,
   theme,
   accentColor,
+  isPublished,
+  portfolioId,
+  socialLinks = [],
 }: {
   content: PortfolioContent | null;
   slug: string;
   publicHandle?: string | null;
   theme: string;
   accentColor: string | null;
+  isPublished: boolean;
+  portfolioId: string;
+  socialLinks?: SocialLink[];
 }) {
   if (!content) {
     return (
@@ -326,7 +380,15 @@ export function EditorLivePreview({
     <PortfolioPublicShell accentColor={accentColor} embed>
       <div className="px-3 py-3 sm:px-4 sm:py-4">
         {neu ? (
-          <NeubrutalismPreview content={content} slug={slug} siteBasePath={siteBasePath} narrowLayout />
+          <NeubrutalismPreview
+            content={content}
+            slug={slug}
+            siteBasePath={siteBasePath}
+            narrowLayout
+            isPublished={isPublished}
+            portfolioId={portfolioId}
+            socialLinks={socialLinks}
+          />
         ) : (
           <>
             <PortfolioClassicMonoView
@@ -334,16 +396,16 @@ export function EditorLivePreview({
               slug={slug}
               siteBasePath={siteBasePath}
               showBlogLink={false}
-              socialLinks={[]}
+              socialLinks={socialLinks}
               narrowLayout
             />
             <p className="mt-4 border-t border-zinc-200 pt-3 text-center text-[10px] uppercase tracking-wider text-zinc-600 dark:border-zinc-700 dark:text-zinc-500">
-              <Link
-                href={siteBasePath}
-                className="font-semibold text-[var(--portfolio-accent)] underline-offset-4 hover:underline"
-              >
-                Open published site
-              </Link>
+              <PreviewSiteLink
+                isPublished={isPublished}
+                portfolioId={portfolioId}
+                siteBasePath={siteBasePath}
+                className="font-semibold underline-offset-4 hover:underline"
+              />
             </p>
           </>
         )}

@@ -22,11 +22,7 @@ export async function POST(request: Request) {
     const userId = appUser?.id ?? 'dev-user';
     const userEmail = appUser?.email ?? 'dev@example.com';
 
-    let user = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .get();
+    let user = await db.select().from(users).where(eq(users.id, userId)).get();
 
     if (!user) {
       if (process.env.NEXTAUTH_DEV_BYPASS === 'true') {
@@ -36,11 +32,7 @@ export async function POST(request: Request) {
           name: appUser?.name ?? 'Dev User',
         });
 
-        user = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, userId))
-          .get();
+        user = await db.select().from(users).where(eq(users.id, userId)).get();
         if (!user) {
           return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
@@ -121,7 +113,12 @@ export async function POST(request: Request) {
     }
 
     const portfolioId = nanoid(12);
-    const slug = `${resumeData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${nanoid(6)}`;
+    const slugBase =
+      resumeData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || 'portfolio';
+    const slug = `${slugBase}-${nanoid(6)}`;
 
     await db.insert(portfolios).values({
       id: portfolioId,
@@ -130,8 +127,7 @@ export async function POST(request: Request) {
       title: `${resumeData.name}'s Portfolio`,
       content: resumeData as unknown as Record<string, unknown>,
       groqConsent: consent,
-      expiresAt:
-        isPaid ? null : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      expiresAt: isPaid ? null : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
     });
 
     if (consent) {
@@ -140,7 +136,7 @@ export async function POST(request: Request) {
         userId,
         portfolioId,
         kind: 'parse',
-        model: apiKey ? 'groq/compound-mini' : null,
+        model: apiKey ? 'llama-3.3-70b-versatile' : null,
         succeeded: aiParseSucceeded,
       });
     }

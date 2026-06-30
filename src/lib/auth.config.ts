@@ -3,30 +3,52 @@ import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
 import LinkedIn from 'next-auth/providers/linkedin';
 
-const providers: NextAuthConfig['providers'] = [
-  GitHub({
-    clientId: process.env.AUTH_GITHUB_ID,
-    clientSecret: process.env.AUTH_GITHUB_SECRET,
-  }),
-  Google({
-    clientId: process.env.AUTH_GOOGLE_ID,
-    clientSecret: process.env.AUTH_GOOGLE_SECRET,
-  }),
-];
+import { getEnabledOAuthProviders } from '@/lib/auth-providers';
 
-if (process.env.AUTH_LINKEDIN_ID && process.env.AUTH_LINKEDIN_SECRET) {
-  providers.push(
-    LinkedIn({
-      clientId: process.env.AUTH_LINKEDIN_ID,
-      clientSecret: process.env.AUTH_LINKEDIN_SECRET,
-      authorization: { params: { scope: 'openid profile email' } },
-    }),
-  );
+process.env.AUTH_URL ||= process.env.NEXTAUTH_URL;
+process.env.AUTH_SECRET ||= process.env.NEXTAUTH_SECRET;
+
+const providers: NextAuthConfig['providers'] = [];
+
+for (const provider of getEnabledOAuthProviders()) {
+  if (provider.id === 'github') {
+    providers.push(
+      GitHub({
+        clientId: process.env.AUTH_GITHUB_ID,
+        clientSecret: process.env.AUTH_GITHUB_SECRET,
+      }),
+    );
+  }
+
+  if (provider.id === 'google') {
+    providers.push(
+      Google({
+        clientId: process.env.AUTH_GOOGLE_ID,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      }),
+    );
+  }
+
+  if (provider.id === 'linkedin') {
+    providers.push(
+      LinkedIn({
+        clientId: process.env.AUTH_LINKEDIN_ID,
+        clientSecret: process.env.AUTH_LINKEDIN_SECRET,
+        authorization: { params: { scope: 'openid profile email' } },
+      }),
+    );
+  }
 }
 
 export const authConfig = {
   trustHost: true,
-  secret: process.env.NEXTAUTH_SECRET || 'dev-secret-do-not-use-in-prod',
+  secret:
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    (process.env.NODE_ENV === 'development' ? 'dev-secret-do-not-use-in-prod' : undefined),
+  session: {
+    strategy: 'jwt',
+  },
   providers,
   pages: {
     signIn: '/sign-in',
@@ -39,9 +61,15 @@ export const authConfig = {
       }
       return !!auth?.user;
     },
-    session({ session, user }) {
+    jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+    session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = token.sub ?? '';
       }
       return session;
     },

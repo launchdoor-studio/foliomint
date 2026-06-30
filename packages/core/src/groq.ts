@@ -1,7 +1,8 @@
 import Groq from 'groq-sdk';
 
 import { ParseError } from './errors';
-import { resumeDataSchema, type ResumeData } from './types';
+import { normalizeResumeData } from './resume-parser';
+import type { ResumeData } from './types';
 
 function buildExtractionPrompt(rawText: string): string {
   return `You are FolioMint's portfolio intake engine. Your job is not to make a generic resume JSON dump; it is to extract reliable facts and shape them into editable portfolio content.
@@ -37,6 +38,9 @@ Return ONLY valid JSON matching this schema:
 }
 
 Rules:
+- Extract as much factual information as possible. Do not stop after profile/contact details; every resume section should map into the JSON when there is supporting text.
+- Accuracy is more important than polish. Never invent companies, dates, degrees, links, metrics, or technologies that are not supported by the resume.
+- Use null or empty arrays for truly missing information, but do not leave fields empty when the resume contains the information under a different heading or dense PDF text.
 - The "name" field MUST be the person's full name (e.g., "John Doe"), not a section heading like "Contact", "Profile", "About", etc.
 - "profileImageUrl" is optional and usually unavailable in resume text exports. Use null unless an explicit personal image URL is present.
 - When the resume comes from LinkedIn or similar, the name is usually the prominent personal name at the top of the document. Use that as "name".
@@ -46,7 +50,7 @@ Rules:
 - Do NOT use a project/product/company URL as "website" unless the resume explicitly states it is the person's site.
 - If a URL belongs to a specific project, place it in that project's "url" field instead.
 - If "website" is ambiguous, return null.
-- Map all section headings semantically (e.g., "Work History" -> experience, "Technical Skills" -> skills)
+- Map all section headings semantically (e.g., "Work History" -> experience, "Technical Skills" -> skills, "Leadership" -> extracurricular unless it is paid work).
 - Normalize dates to readable formats (e.g., "Jan 2023", "2023")
 - Keep bullet points concise
 - If a section is missing, use empty arrays
@@ -57,7 +61,9 @@ Rules:
 - PROJECTS: "description" is optional — at most ONE short sentence (or null). Never paste an entire bullet list into "description".
 - PROJECTS: Put stack/tech keywords in "technologies" only when the resume lists them as technologies for that project; otherwise omit "technologies".
 - PROJECTS: Prefer surfacing project impact, stack, links, and ownership because portfolios are often judged from projects first.
-- EXPERIENCE: Preserve measurable impact, scope, and technologies. Rewrite only for clarity; do not inflate numbers.
+- EXPERIENCE: Use 3-6 complete achievement bullets per role. Each bullet must be one full sentence starting with a strong action verb (Built, Shipped, Led, Optimized, etc.). Never split one accomplishment across multiple bullets. Never emit single-word bullets, comma fragments, or lines starting with "and". Group related product/feature details into the same bullet when they describe one outcome.
+- EDUCATION: Capture institution, degree, field/major, dates, GPA, coursework, and academic honors when present. Put coursework/honors that do not fit the schema into "otherSections".
+- SKILLS: Return at most 24 distinct, short skill tags (e.g. "TypeScript", "React", "PostgreSQL"). Prefer languages, frameworks, databases, and widely recognized tools. Do NOT prefix skills with category labels (never "Languages : TypeScript" — use "TypeScript" only). Never include school or university names in skills. Do not list the same skill twice in different forms.
 - AWARDS: Map sections titled Awards, Honors, Achievements, Recognition to "awards" as a flat list of strings.
 - EXTRACURRICULAR: Map sections titled Extracurricular, Activities, Leadership, Volunteering (when not a job) to "extracurricular" as subsections: each subsection has its own "title" and "bullets".
 - OTHER SECTIONS: If the resume has a labeled section that does not fit above (e.g., Publications, Patents, Volunteer, Courses), put it in "otherSections" as {"title": "<section heading>", "bullets": [...]}. Prefer first-class fields when obvious.
@@ -71,7 +77,10 @@ ${rawText}
 ---`;
 }
 
-function sanitizeWebsiteField(data: Record<string, unknown>, rawText: string): Record<string, unknown> {
+function sanitizeWebsiteField(
+  data: Record<string, unknown>,
+  rawText: string,
+): Record<string, unknown> {
   const website = typeof data.website === 'string' ? data.website.trim() : null;
   if (!website) return data;
 
@@ -79,7 +88,9 @@ function sanitizeWebsiteField(data: Record<string, unknown>, rawText: string): R
   const projectUrls = new Set(
     projects
       .map((project) =>
-        project && typeof project === 'object' && typeof (project as { url?: unknown }).url === 'string'
+        project &&
+        typeof project === 'object' &&
+        typeof (project as { url?: unknown }).url === 'string'
           ? (project as { url: string }).url.trim()
           : null,
       )
@@ -116,7 +127,10 @@ function normalizeProjectBullets(data: Record<string, unknown>): Record<string, 
     const desc = typeof p.description === 'string' ? p.description.trim() : '';
 
     if (bullets.length === 0 && desc.includes(';')) {
-      const parts = desc.split(';').map((s) => s.trim()).filter(Boolean);
+      const parts = desc
+        .split(';')
+        .map((s) => s.trim())
+        .filter(Boolean);
       if (parts.length >= 2) {
         return { ...p, bullets: parts, description: null };
       }
@@ -145,10 +159,17 @@ export async function extractResumeFields(rawText: string, apiKey: string): Prom
 
   try {
     const completion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'groq/compound-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You extract structured portfolio data from resumes. Return strict JSON only and preserve facts from every section.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      model: 'llama-3.3-70b-versatile',
       temperature: 0.1,
-      max_tokens: 4096,
+      max_tokens: 8192,
       response_format: { type: 'json_object' },
     });
 
@@ -160,7 +181,7 @@ export async function extractResumeFields(rawText: string, apiKey: string): Prom
 
     const parsed = JSON.parse(json) as Record<string, unknown>;
     const sanitized = normalizeProjectBullets(sanitizeWebsiteField(parsed, rawText));
-    return resumeDataSchema.parse(sanitized);
+    return normalizeResumeData(sanitized, rawText);
   } catch (error) {
     if (error instanceof ParseError) throw error;
 

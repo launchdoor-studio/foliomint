@@ -5,6 +5,7 @@ import { PortfolioContentView } from '@/components/domain/portfolio-content-view
 import { db } from '@/lib/db';
 import { blogPosts, integrations } from '@/lib/db/schema';
 import type { PublicPortfolioRow } from '@/lib/portfolio-public';
+import { ACTIVE_PORTFOLIO_THEME } from '@/lib/portfolio-profile-links';
 import { integrationToSocialLink } from '@/lib/social-links';
 import { logPortfolioView, parseViewHeaders } from '@/lib/view-log';
 import type { PortfolioContent } from '@/types';
@@ -17,16 +18,21 @@ export async function PortfolioPublicHome({
   portfolio,
   siteBasePath,
   displaySlug,
+  skipViewLog = false,
 }: {
   portfolio: PublicPortfolioRow;
   siteBasePath: string;
   displaySlug: string;
+  /** Skip analytics logging (e.g. owner draft preview). */
+  skipViewLog?: boolean;
 }) {
   const headerList = headers();
-  await logPortfolioView(
-    portfolio.id,
-    parseViewHeaders((name) => headerList.get(name)),
-  );
+  if (!skipViewLog) {
+    await logPortfolioView(
+      portfolio.id,
+      parseViewHeaders((name) => headerList.get(name)),
+    );
+  }
 
   const content = portfolio.content as unknown as PortfolioContent;
 
@@ -52,7 +58,7 @@ export async function PortfolioPublicHome({
       content={content}
       slug={displaySlug}
       siteBasePath={siteBasePath}
-      theme={portfolio.theme}
+      theme={ACTIVE_PORTFOLIO_THEME}
       showBlogLink={showBlog}
       socialLinks={socialLinks}
     />

@@ -115,6 +115,27 @@ export function portfolioInlineLinkClass(neu: boolean): string {
     : 'text-xs font-semibold text-[var(--portfolio-accent)] underline-offset-4 hover:underline';
 }
 
+/** Icon-only social / profile link buttons in the hero. */
+export function portfolioOutboundIconButtonClass(neu: boolean): string {
+  return neu
+    ? cn(
+        'inline-flex h-10 w-10 items-center justify-center border-4 border-zinc-900 bg-white',
+        'text-zinc-900 shadow-[4px_4px_0_0_rgb(24_24_27)] no-underline',
+        'transition-transform hover:translate-x-px hover:translate-y-px',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2',
+        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[4px_4px_0_0_rgb(228_228_231)]',
+        'dark:focus-visible:ring-zinc-200',
+      )
+    : cn(
+        'inline-flex h-9 w-9 items-center justify-center border border-zinc-300 bg-white',
+        'text-zinc-500 no-underline transition-colors',
+        'hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portfolio-accent)] focus-visible:ring-offset-2',
+        'dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300',
+        'dark:hover:border-[var(--portfolio-accent)] dark:hover:text-[var(--portfolio-accent)]',
+      );
+}
+
 /** Social / outbound link chips (same family as nav pill, slightly tighter). */
 export function portfolioOutboundChipClass(neu: boolean): string {
   return neu

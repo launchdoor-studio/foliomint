@@ -1,17 +1,10 @@
 import Link from 'next/link';
-import {
-  Github,
-  Globe,
-  Linkedin,
-  Mail,
-  MapPin,
-  Twitter,
-  Youtube,
-  type LucideIcon,
-} from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 import { PortfolioPublicFooter } from '@/components/domain/portfolio-public-footer';
+import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
+import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
 import type { SocialLink } from '@/lib/social-links';
 import { cn, normalizeOutboundHref } from '@/lib/utils';
 import type { PortfolioContent } from '@/types';
@@ -48,57 +41,6 @@ function splitBioParagraphs(bio?: string | null): string[] {
     .filter(Boolean);
 }
 
-function normalizeHref(href: string): string {
-  return href.trim().replace(/\/$/, '').toLowerCase();
-}
-
-/** Parse hostname for icon matching; avoids substring bugs (e.g. `fox.com` matching `x.com`). */
-function hostnameForIconMatch(href: string): string | null {
-  try {
-    const raw = href.trim();
-    if (!raw) return null;
-    const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`;
-    return new URL(withScheme).hostname.toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
-function isTwitterHostname(host: string): boolean {
-  return host === 'x.com' || host === 'twitter.com' || host.endsWith('.twitter.com');
-}
-
-function buildProfileLinks(content: PortfolioContent, socialLinks: SocialLink[]): SocialLink[] {
-  const links: SocialLink[] = [];
-  if (content.email) links.push({ label: 'Email', href: `mailto:${content.email}` });
-  if (content.website) links.push({ label: 'Website', href: content.website });
-  if (content.github) links.push({ label: 'GitHub', href: content.github });
-  if (content.linkedin) links.push({ label: 'LinkedIn', href: content.linkedin });
-  links.push(...socialLinks);
-  const seen = new Set<string>();
-  return links.filter((link) => {
-    const key = `${link.label.toLowerCase()}::${normalizeHref(normalizeOutboundHref(link.href))}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function iconForProfileLink(link: SocialLink): LucideIcon {
-  const label = link.label.toLowerCase();
-  const href = link.href.toLowerCase();
-  const host = hostnameForIconMatch(link.href);
-
-  if (label.includes('github') || (host && (host === 'github.com' || host.endsWith('.github.com')))) return Github;
-  if (label.includes('linkedin') || (host && (host === 'linkedin.com' || host.endsWith('.linkedin.com'))))
-    return Linkedin;
-  if (label.includes('twitter') || label === 'x' || (host && isTwitterHostname(host))) return Twitter;
-  if (label.includes('youtube') || (host && (host === 'youtube.com' || host === 'youtu.be' || host.endsWith('.youtube.com'))))
-    return Youtube;
-  if (label.includes('email') || href.startsWith('mailto:')) return Mail;
-  return Globe;
-}
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="mb-6 border-b border-zinc-200 pb-2 text-lg font-bold tracking-tight text-zinc-900 dark:border-zinc-700 dark:text-zinc-100 sm:text-xl">
@@ -130,7 +72,7 @@ export function PortfolioClassicMonoView({
 }: PortfolioClassicMonoViewProps) {
   const sortedExperience = content.experience ? sortExperienceMostRecentFirst(content.experience) : [];
   const bioParagraphs = splitBioParagraphs(content.bio);
-  const profileLinks = buildProfileLinks(content, socialLinks);
+  const profileLinks = buildPortfolioProfileLinks(content, socialLinks);
   const displayName = content.name?.trim() || slug;
   const initial = displayName.charAt(0).toUpperCase() || '?';
   const navItems = [
@@ -261,23 +203,7 @@ export function PortfolioClassicMonoView({
               </p>
             ) : null}
             {profileLinks.length > 0 ? (
-              <div className="flex flex-wrap gap-2 pt-2">
-                {profileLinks.map((link, idx) => {
-                  const Icon = iconForProfileLink(link);
-                  return (
-                    <a
-                      key={`${link.label}-${idx}`}
-                      href={normalizeOutboundHref(link.href)}
-                      target={link.href.startsWith('mailto:') ? undefined : '_blank'}
-                      rel={link.href.startsWith('mailto:') ? undefined : 'noreferrer'}
-                      className="inline-flex h-9 w-9 items-center justify-center border border-zinc-300 text-zinc-500 transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)] dark:border-zinc-600"
-                      aria-label={link.label}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </a>
-                  );
-                })}
-              </div>
+              <PortfolioProfileLinkButtons links={profileLinks} neu={false} className="pt-2" />
             ) : null}
           </div>
         </section>

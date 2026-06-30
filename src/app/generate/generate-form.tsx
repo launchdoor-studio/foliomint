@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -34,6 +34,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
   const [consent, setConsent] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,16 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
     }
     return null;
   }, []);
+
+  useEffect(() => {
+    if (!isAuthed) return;
+    void fetch('/api/me', { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { aiConfigured?: boolean } | null) => {
+        setAiConfigured(Boolean(data?.aiConfigured));
+      })
+      .catch(() => setAiConfigured(false));
+  }, [isAuthed]);
 
   const handleFileSelect = useCallback(
     (f: File) => {
@@ -72,6 +83,10 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
 
   const handleSubmit = async () => {
     if (!file) return;
+    if (consent && aiConfigured === false) {
+      setError('ai_key_required');
+      return;
+    }
     setIsUploading(true);
     setError(null);
     setStatusMessage(
@@ -162,6 +177,8 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
   };
 
   const isAuthError = error === 'session_expired';
+  const isAiKeyError = error === 'ai_key_required';
+  const aiConsentBlocked = consent && aiConfigured === false;
 
   if (!isAuthed) {
     const previewSteps = [
@@ -301,7 +318,12 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                 <input
                   type="checkbox"
                   checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
+                  onChange={(e) => {
+                    setConsent(e.target.checked);
+                    if (e.target.checked && error === 'ai_key_required') {
+                      setError(null);
+                    }
+                  }}
                   className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
                 />
                 <div>
@@ -310,6 +332,15 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                     Your resume text will be sent to Groq&apos;s API for semantic extraction. No
                     content is stored by Groq. Uncheck to use basic text extraction instead.
                   </p>
+                  {aiConsentBlocked && (
+                    <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+                      Add your Groq API key in{' '}
+                      <Link href="/dashboard/settings" className="font-medium underline">
+                        Settings
+                      </Link>{' '}
+                      to use AI parsing, or uncheck this box for basic extraction.
+                    </p>
+                  )}
                 </div>
               </label>
 
@@ -317,7 +348,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                 <div
                   className={cn(
                     'flex items-center gap-2 rounded-lg px-4 py-3 text-sm',
-                    isAuthError
+                    isAuthError || isAiKeyError
                       ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                       : 'bg-destructive/10 text-destructive',
                   )}
@@ -330,6 +361,14 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                         sign in again
                       </Link>{' '}
                       to continue.
+                    </span>
+                  ) : isAiKeyError ? (
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      AI parsing needs a Groq key. Add one in{' '}
+                      <Link href="/dashboard/settings" className="font-medium underline">
+                        Settings
+                      </Link>{' '}
+                      or uncheck AI parsing above.
                     </span>
                   ) : (
                     error
@@ -346,7 +385,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
 
               <Button
                 onClick={handleSubmit}
-                disabled={!file || isUploading || isCreatingBlank}
+                disabled={!file || isUploading || isCreatingBlank || aiConsentBlocked}
                 size="lg"
                 className="w-full"
               >

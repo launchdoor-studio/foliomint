@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 
 import { PortfolioClassicMonoView } from '@/components/domain/portfolio-classic-mono-view';
+import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
 import { PortfolioPublicFooter } from '@/components/domain/portfolio-public-footer';
+import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
 import {
   PORTFOLIO_CARD_PAD,
   PORTFOLIO_SECTION_GAP,
@@ -15,7 +18,6 @@ import {
   portfolioHeaderRuleClass,
   portfolioInlineLinkClass,
   portfolioNavPillClass,
-  portfolioOutboundChipClass,
   portfolioSectionAccentClass,
   portfolioSectionTitleRowClass,
   portfolioShellClass,
@@ -104,6 +106,7 @@ export function PortfolioContentView({
   socialLinks = [],
 }: PortfolioContentViewProps) {
   const neu = theme === 'neubrutalism';
+  const profileLinks = buildPortfolioProfileLinks(content, socialLinks);
 
   const card = portfolioCardClass(neu);
   const pad = PORTFOLIO_CARD_PAD;
@@ -168,6 +171,15 @@ export function PortfolioContentView({
                   {content.bio}
                 </p>
               )}
+              {content.location ? (
+                <p className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                  {content.location}
+                </p>
+              ) : null}
+              {profileLinks.length > 0 ? (
+                <PortfolioProfileLinkButtons links={profileLinks} neu className="pt-1" />
+              ) : null}
             </div>
           </div>
         </header>
@@ -325,24 +337,6 @@ export function PortfolioContentView({
             </section>
           )}
 
-          {socialLinks.length > 0 && (
-            <section>
-              <SectionHeading neu={neu}>Links</SectionHeading>
-              <div className="flex flex-wrap gap-3">
-                {socialLinks.map((link, i) => (
-                  <a
-                    key={`${link.label}-${link.href}-${i}`}
-                    href={normalizeOutboundHref(link.href)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={portfolioOutboundChipClass(neu)}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
 
         <PortfolioPublicFooter neu={neu} label="Published profile" />

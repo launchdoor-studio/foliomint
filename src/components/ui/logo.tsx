@@ -9,11 +9,11 @@ interface LogoProps {
   showText?: boolean;
 }
 
-export function Logo({ className, size = 32, showText = true }: LogoProps) {
+export function Logo({ className, size = 40, showText = true }: LogoProps) {
   return (
     <Link href="/" className={cn('flex items-center gap-2', className)}>
       <Image
-        src="/logo.svg"
+        src="/new-logo.png"
         alt="FolioMint"
         width={size}
         height={size}

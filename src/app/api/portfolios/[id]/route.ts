@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 
 import { getTierLimits, getUserTier } from '@/lib/access';
 import { getCurrentUser } from '@/lib/auth';
@@ -97,6 +97,9 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     theme?: PortfolioTheme;
     accentColor?: string | null;
     isPublished?: boolean;
+    status?: 'draft' | 'published' | 'unpublished' | 'archived';
+    publishedAt?: Date | null;
+    unpublishedAt?: Date | null;
     content?: Record<string, unknown>;
     customDomain?: string | null;
     customDomainVerified?: boolean;
@@ -125,7 +128,35 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   }
 
   if (typeof body.isPublished === 'boolean') {
-    set.isPublished = body.isPublished;
+    if (body.isPublished && !existing.isPublished) {
+      const tier = await getUserTier(userId);
+      const limits = getTierLimits(tier);
+      if (Number.isFinite(limits.maxPublishedPortfolios)) {
+        const [publishedRow] = await db
+          .select({ value: count() })
+          .from(portfolios)
+          .where(and(eq(portfolios.userId, userId), eq(portfolios.isPublished, true)));
+        const publishedCount = publishedRow?.value ?? 0;
+        if (publishedCount >= limits.maxPublishedPortfolios) {
+          return NextResponse.json(
+            {
+              error:
+                'Free includes one published portfolio at a time. Unpublish your other portfolio or upgrade to Pro.',
+            },
+            { status: 403 },
+          );
+        }
+      }
+      set.isPublished = true;
+      set.status = 'published';
+      set.publishedAt = new Date();
+    } else if (!body.isPublished && existing.isPublished) {
+      set.isPublished = false;
+      set.status = 'unpublished';
+      set.unpublishedAt = new Date();
+    } else {
+      set.isPublished = body.isPublished;
+    }
   }
 
   if (body.content !== undefined) {
@@ -172,7 +203,12 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     resolvedPublicHandle = nextHandle;
   }
 
-  await db.update(portfolios).set(set).where(eq(portfolios.id, params.id));
+  try {
+    await db.update(portfolios).set(set).where(eq(portfolios.id, params.id));
+  } catch (error) {
+    console.error('Portfolio update failed:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Failed to save portfolio. Please try again.' }, { status: 500 });
+  }
 
   const publishEmail = appUser?.email;
   if (

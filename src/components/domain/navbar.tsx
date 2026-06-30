@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, LogOut, LayoutDashboard, Sparkles } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard, Sparkles, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
@@ -97,6 +97,14 @@ export function Navbar() {
                       Dashboard
                     </Link>
                     <Link
+                      href="/dashboard/settings"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                    <Link
                       href="/upgrade"
                       className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
                       onClick={() => setUserMenuOpen(false)}
@@ -170,6 +178,13 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 Dashboard
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setMobileOpen(false)}
+              >
+                Settings
               </Link>
               <Button asChild className="w-full justify-center" onClick={() => setMobileOpen(false)}>
                 <Link href="/upgrade">Upgrade to Pro</Link>

@@ -8,7 +8,11 @@ import { LayoutDashboard, Save, Eye, Globe, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { toastAfterPortfolioSave } from '@/lib/editor-save-toast';
+import { buildPortfolioSavePayload } from '@/lib/editor-save-payload';
 import { serializeEditorPageState } from '@/lib/editor-state-snapshot';
+import { ACTIVE_PORTFOLIO_THEME } from '@/lib/portfolio-profile-links';
+import { integrationToSocialLink } from '@/lib/social-links';
+import type { SocialLink } from '@/lib/social-links';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,19 +29,14 @@ import { cn } from '@/lib/utils';
 import type { EditorPageState } from '@/types/editor-page';
 import type { PortfolioContent } from '@/types';
 
-const PORTFOLIO_THEME_LABELS: Record<string, string> = {
-  classic: 'Classic mono',
-  minimal: 'Minimal',
-  neubrutalism: 'Neubrutalism',
-  editorial: 'Editorial',
-  terminal: 'Terminal',
-};
+const PORTFOLIO_THEME_LABEL = 'Neubrutalism';
 
 export default function EditorPage() {
   const params = useParams<{ portfolioId: string }>();
   const router = useRouter();
   const [state, setState] = useState<EditorPageState | null>(null);
   const [tier, setTier] = useState<'free' | 'pro'>('pro');
+  const [integrationSocialLinks, setIntegrationSocialLinks] = useState<SocialLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,15 +65,39 @@ export default function EditorPage() {
           slug: data.slug,
           publicHandle: data.publicHandle ?? null,
           title: data.title,
-          theme: data.theme,
+          theme: ACTIVE_PORTFOLIO_THEME,
           accentColor: data.accentColor ?? null,
           isPublished: data.isPublished,
           content: data.content,
         };
+        if (data.theme !== ACTIVE_PORTFOLIO_THEME) {
+          void fetch(`/api/portfolios/${id}`, {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ theme: ACTIVE_PORTFOLIO_THEME }),
+          });
+        }
         setState(loaded);
         saveBaselineRef.current = serializeEditorPageState(loaded);
         const me = await fetch('/api/me', { credentials: 'include' }).then((r) => r.json() as Promise<{ tier?: string }>);
         setTier(me.tier === 'pro' ? 'pro' : 'free');
+
+        const integrationsRes = await fetch('/api/integrations', { credentials: 'include' });
+        if (integrationsRes.ok) {
+          const integrationsData = (await integrationsRes.json()) as {
+            integrations: Array<{
+              platform: string;
+              username: string | null;
+              data: Record<string, unknown> | null;
+            }>;
+          };
+          const links = integrationsData.integrations
+            .map((row) => integrationToSocialLink(row.platform, row.username, row.data))
+            .filter((link): link is SocialLink => link !== null);
+          setIntegrationSocialLinks(links);
+        }
+
         setError(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load portfolio');
@@ -91,21 +114,17 @@ export default function EditorPage() {
     const prevPublished = state.isPublished;
     setSaving(true);
     try {
-      const next = { ...state, ...updates };
+      const next = { ...state, ...updates, theme: ACTIVE_PORTFOLIO_THEME };
       const res = await fetch(`/api/portfolios/${state.id}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: next.title,
-          theme: next.theme,
-          accentColor: next.accentColor,
-          isPublished: next.isPublished,
-          content: next.content,
-          publicHandle: next.publicHandle,
-        }),
+        body: JSON.stringify(buildPortfolioSavePayload(next, updates)),
       });
-      if (!res.ok) throw new Error('Failed to save portfolio');
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || 'Failed to save portfolio');
+      }
       setState(next);
       saveBaselineRef.current = serializeEditorPageState(next);
       setError(null);
@@ -199,7 +218,7 @@ export default function EditorPage() {
           <CardHeader className="shrink-0 space-y-1 border-b border-border/60 bg-background/80 pb-4 dark:border-white/10">
             <CardTitle className={editorCardTitleClass}>Live preview</CardTitle>
             <p className="font-sans text-xs text-muted-foreground">
-              Updates as you type. Theme: {PORTFOLIO_THEME_LABELS[state.theme] ?? state.theme} — matches what visitors
+              Updates as you type. Theme: {PORTFOLIO_THEME_LABEL} — matches what visitors
               see (they can switch light/dark on the published site).
             </p>
           </CardHeader>
@@ -216,8 +235,11 @@ export default function EditorPage() {
                   content={content}
                   slug={state.slug}
                   publicHandle={state.publicHandle}
-                  theme={state.theme}
+                  theme={ACTIVE_PORTFOLIO_THEME}
                   accentColor={state.accentColor}
+                  isPublished={state.isPublished}
+                  portfolioId={state.id}
+                  socialLinks={integrationSocialLinks}
                 />
               </motion.div>
             </AnimatePresence>
@@ -273,25 +295,9 @@ export default function EditorPage() {
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <label className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-                Theme
-                <select
-                  className="h-8 rounded-md border-2 border-input bg-background px-2 font-mono text-xs font-bold uppercase tracking-[0.08em]"
-                  value={state.theme}
-                  onChange={(e) => void handleSave({ theme: e.target.value })}
-                  disabled={saving}
-                >
-                  <option value="neubrutalism">Neubrutalism</option>
-                  <option value="classic">Classic mono</option>
-                  <option value="minimal">Minimal</option>
-                  <option value="editorial" disabled={tier === 'free'}>
-                    Editorial (Pro)
-                  </option>
-                  <option value="terminal" disabled={tier === 'free'}>
-                    Terminal (Pro)
-                  </option>
-                </select>
-              </label>
+              <span className="hidden rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground sm:inline">
+                {PORTFOLIO_THEME_LABEL}
+              </span>
               <Button asChild variant="secondary" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5">
                 <Link
                   href={`/dashboard/portfolios/${state.id}/manage`}

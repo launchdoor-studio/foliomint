@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from './schema';
 
 const useTurso =
+  process.env.NODE_ENV === 'production' &&
   process.env.TURSO_DATABASE_URL &&
   process.env.TURSO_DATABASE_URL.trim() !== '';
 
