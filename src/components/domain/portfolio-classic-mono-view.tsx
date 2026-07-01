@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 
 import { PortfolioPublicFooter } from '@/components/domain/portfolio-public-footer';
 import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
+import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
 import type { SocialLink } from '@/lib/social-links';
@@ -296,20 +297,11 @@ export function PortfolioClassicMonoView({
                 <article key={`proj-${idx}`}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 sm:text-lg">{project.name}</h3>
-                    {project.url ? (
-                      <a
-                        href={normalizeOutboundHref(project.url)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="shrink-0 text-xs font-bold text-[var(--portfolio-accent)] underline underline-offset-4 hover:opacity-90"
-                      >
-                        Open link
-                      </a>
-                    ) : null}
                   </div>
                   {project.description ? (
                     <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:mt-3">{project.description}</p>
                   ) : null}
+                  <PortfolioProjectLinkChips project={project} neu={false} className="mt-3" />
                   {project.bullets && project.bullets.length > 0 ? (
                     <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
                       {project.bullets.map((b, i) => (

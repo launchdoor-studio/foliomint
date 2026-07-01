@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 
 import { PortfolioClassicMonoView } from '@/components/domain/portfolio-classic-mono-view';
 import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
+import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
 import { PortfolioPublicFooter } from '@/components/domain/portfolio-public-footer';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
@@ -16,14 +17,13 @@ import {
   portfolioDateBadgeClass,
   portfolioEyebrowClass,
   portfolioHeaderRuleClass,
-  portfolioInlineLinkClass,
   portfolioNavPillClass,
   portfolioSectionAccentClass,
   portfolioSectionTitleRowClass,
   portfolioShellClass,
   portfolioSkillChipClass,
 } from '@/lib/portfolio-public-ui';
-import { cn, normalizeOutboundHref } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import type { SocialLink } from '@/lib/social-links';
 import type { PortfolioContent } from '@/types';
 
@@ -263,32 +263,29 @@ export function PortfolioContentView({
               <div className={cn('grid gap-5', content.projects.length > 1 && 'sm:grid-cols-2')}>
                 {content.projects.map((project, idx) => (
                   <div key={`${project.name}-${idx}`} className={cn('flex flex-col', card, pad)}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100 sm:text-lg">{project.name}</h3>
-                      {project.url && (
-                        <a
-                          href={normalizeOutboundHref(project.url)}
-                          className={portfolioInlineLinkClass(neu)}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open →
-                        </a>
-                      )}
-                    </div>
-                    {project.description && (
-                      <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{project.description}</p>
-                    )}
-                    {project.technologies && project.technologies.length > 0 && (
-                      <p className="mt-4 text-xs font-medium text-zinc-600 dark:text-zinc-500">
-                        {project.technologies.join(' · ')}
+                    <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100 sm:text-lg">
+                      {project.name}
+                    </h3>
+                    {project.description ? (
+                      <p className="mt-2 text-sm font-medium leading-relaxed text-zinc-700 dark:text-zinc-300">
+                        {project.description}
                       </p>
-                    )}
-                    {project.bullets && project.bullets.length > 0 && (
-                      <div className="mt-5">
-                        <BulletList items={project.bullets} neu={neu} />
+                    ) : null}
+                    <PortfolioProjectLinkChips project={project} neu={neu} className="mt-4" />
+                    {project.technologies && project.technologies.length > 0 ? (
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {project.technologies.map((tech) => (
+                          <span key={tech} className={portfolioSkillChipClass(neu)}>
+                            {tech}
+                          </span>
+                        ))}
                       </div>
-                    )}
+                    ) : null}
+                    {project.bullets && project.bullets.length > 0 ? (
+                      <div className={cn(project.description || project.technologies?.length ? 'mt-5' : 'mt-4')}>
+                        <BulletList items={project.bullets} neu={neu} dense />
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>

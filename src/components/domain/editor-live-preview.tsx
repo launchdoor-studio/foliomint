@@ -5,15 +5,15 @@ import { MapPin } from 'lucide-react';
 
 import { PortfolioClassicMonoView } from '@/components/domain/portfolio-classic-mono-view';
 import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
+import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicShell } from '@/components/domain/portfolio-public-shell';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
-import { cn, normalizeOutboundHref } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import {
   PORTFOLIO_CARD_PAD,
   portfolioBulletDotClass,
   portfolioBulletLineClass,
   portfolioCardClass,
-  portfolioInlineLinkClass,
   portfolioSectionAccentClass,
   portfolioSectionTitleRowClass,
   portfolioSkillChipClass,
@@ -265,27 +265,27 @@ function NeubrutalismPreview({
             <div className="grid grid-cols-1 gap-4">
               {content.projects.map((project, idx) => (
                 <div key={`${project.name}-${idx}`} className={cn('flex flex-col', card, pad)}>
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100">{project.name}</h3>
-                    {project.url && (
-                      <a
-                        href={normalizeOutboundHref(project.url)}
-                        className={portfolioInlineLinkClass(neu)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open →
-                      </a>
-                    )}
-                  </div>
-                  {project.description && (
-                    <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{project.description}</p>
-                  )}
-                  {project.bullets && project.bullets.length > 0 && (
-                    <div className="mt-4">
-                      <PortfolioBulletList items={project.bullets} neu={neu} />
+                  <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100">{project.name}</h3>
+                  {project.description ? (
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-zinc-600 dark:text-zinc-300">
+                      {project.description}
+                    </p>
+                  ) : null}
+                  <PortfolioProjectLinkChips project={project} neu={neu} className="mt-3" />
+                  {project.technologies && project.technologies.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {project.technologies.map((tech) => (
+                        <span key={tech} className={portfolioSkillChipClass(neu)}>
+                          {tech}
+                        </span>
+                      ))}
                     </div>
-                  )}
+                  ) : null}
+                  {project.bullets && project.bullets.length > 0 ? (
+                    <div className="mt-4">
+                      <PortfolioBulletList items={project.bullets} neu={neu} dense />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

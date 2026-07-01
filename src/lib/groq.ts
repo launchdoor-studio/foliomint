@@ -1,7 +1,8 @@
 import Groq from 'groq-sdk';
 
 import { ParseError } from '@/lib/errors';
-import { normalizeResumeData } from '@/lib/resume-parser';
+import { normalizeResumeData, normalizeProjectBullets } from '@/lib/resume-parser';
+import { normalizeProjectLinks } from '@/lib/project-links';
 import type { ResumeData } from '@/types';
 
 function buildExtractionPrompt(rawText: string): string {
@@ -23,7 +24,7 @@ Return ONLY valid JSON matching this schema:
   "skills": ["string"],
   "experience": [{"company": "string", "role": "string", "startDate": "string", "endDate": "string or omit if current", "bullets": ["string"], "location": "string or omit"}],
   "education": [{"institution": "string", "degree": "string", "field": "string or omit", "startDate": "string", "endDate": "string or omit", "gpa": "string or omit"}],
-  "projects": [{"name": "string", "description": "string or null", "url": "string or omit", "technologies": ["string"] or omit, "bullets": ["string"]}],
+  "projects": [{"name": "string", "description": "string or null (one short tagline max)", "links": [{"label": "GitHub|GitLab|Website|App Store|Play Store|Demo|etc.", "url": "https://..."}], "technologies": ["string"] or omit, "bullets": ["string"]}],
   "certifications": ["string"] or omit,
   "languages": ["string"] or omit,
   "awards": ["string"] or omit,
@@ -48,8 +49,10 @@ Rules:
 - Contact fields ("email", "phone", "location", "website", "linkedin", "github") should come from explicit contact/profile info, not from project descriptions.
 - Set "website" ONLY when the URL is clearly the person's own site/portfolio/homepage/blog.
 - Do NOT use a project/product/company URL as "website" unless the resume explicitly states it is the person's site.
-- If a URL belongs to a specific project, place it in that project's "url" field instead.
+- If a URL belongs to a specific project, put it in that project's "links" array (not top-level "website").
 - If "website" is ambiguous, return null.
+- PROJECT LINKS: Each project may have multiple links in "links" — GitHub repo, live demo, App Store, Play Store, GitLab, case study site, etc. Use clear labels (GitHub, App Store, Play Store, Website, Demo, GitLab).
+- Legacy "url" on a project is discouraged; prefer "links" with one entry per URL.
 - Map all section headings semantically (e.g., "Work History" -> experience, "Technical Skills" -> skills, "Leadership" -> extracurricular unless it is paid work).
 - Normalize dates to readable formats (e.g., "Jan 2023", "2023")
 - Keep bullet points concise
@@ -57,8 +60,8 @@ Rules:
 - HEADLINE: Derive a concise portfolio headline from the strongest evidence: current role, target role, seniority, domain, or skill cluster. Do not invent a job title that conflicts with the resume.
 - BIO: Keep "bio" as a polished 2-4 sentence professional summary suitable for a portfolio homepage. If the resume summary is weak, improve wording without adding unsupported claims.
 - HERO TAGLINE: Make it shorter and punchier than bio, suitable below a hero heading.
-- PROJECTS (critical): For EVERY project, you MUST populate "bullets" with one entry per bullet line from the resume. Do not merge multiple bullets into "description".
-- PROJECTS: "description" is optional — at most ONE short sentence (or null). Never paste an entire bullet list into "description".
+- PROJECTS (critical): For EVERY project, you MUST populate "bullets" with 2-5 concise outcome bullets when the resume provides enough detail. Each bullet is one complete sentence focused on impact, scope, or tech — not a comma list.
+- PROJECTS: "description" is optional — at most ONE short tagline sentence (or null). Never paste an entire bullet list or long paragraph into "description".
 - PROJECTS: Put stack/tech keywords in "technologies" only when the resume lists them as technologies for that project; otherwise omit "technologies".
 - PROJECTS: Prefer surfacing project impact, stack, links, and ownership because portfolios are often judged from projects first.
 - EXPERIENCE: Use 3-6 complete achievement bullets per role. Each bullet must be one full sentence starting with a strong action verb (Built, Shipped, Led, Optimized, etc.). Never split one accomplishment across multiple bullets. Never emit single-word bullets, comma fragments, or lines starting with "and". Group related product/feature details into the same bullet when they describe one outcome.
@@ -85,17 +88,21 @@ function sanitizeWebsiteField(
   if (!website) return data;
 
   const projects = Array.isArray(data.projects) ? data.projects : [];
-  const projectUrls = new Set(
-    projects
-      .map((project) =>
-        project &&
-        typeof project === 'object' &&
-        typeof (project as { url?: unknown }).url === 'string'
-          ? (project as { url: string }).url.trim()
-          : null,
-      )
-      .filter((url): url is string => Boolean(url)),
-  );
+  const projectUrls = new Set<string>();
+  for (const project of projects) {
+    if (!project || typeof project !== 'object') continue;
+    const record = project as { url?: unknown; links?: unknown };
+    if (typeof record.url === 'string' && record.url.trim()) {
+      projectUrls.add(record.url.trim());
+    }
+    if (Array.isArray(record.links)) {
+      for (const link of record.links) {
+        if (link && typeof link === 'object' && typeof (link as { url?: unknown }).url === 'string') {
+          projectUrls.add((link as { url: string }).url.trim());
+        }
+      }
+    }
+  }
 
   if (!projectUrls.has(website)) {
     return data;
@@ -114,29 +121,29 @@ function sanitizeWebsiteField(
   return data;
 }
 
-/** When the model merges bullets into description, split on semicolons as a generic recovery step. */
-function normalizeProjectBullets(data: Record<string, unknown>): Record<string, unknown> {
+/** When the model merges bullets into description, split and normalize project copy. */
+function normalizeProjectFields(data: Record<string, unknown>): Record<string, unknown> {
   if (!Array.isArray(data.projects)) return data;
 
   data.projects = data.projects.map((item) => {
     if (!item || typeof item !== 'object') return item;
     const p = item as Record<string, unknown>;
-    const bullets = Array.isArray(p.bullets)
+    const legacyUrl = typeof p.url === 'string' ? p.url.trim() : '';
+    const links = normalizeProjectLinks(p.links, legacyUrl || null);
+    const desc = typeof p.description === 'string' ? p.description.trim() : '';
+    const rawBullets = Array.isArray(p.bullets)
       ? p.bullets.map((b) => String(b).trim()).filter(Boolean)
       : [];
-    const desc = typeof p.description === 'string' ? p.description.trim() : '';
+    const { bullets, description } = normalizeProjectBullets(rawBullets, desc || null);
 
-    if (bullets.length === 0 && desc.includes(';')) {
-      const parts = desc
-        .split(';')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (parts.length >= 2) {
-        return { ...p, bullets: parts, description: null };
-      }
-    }
-
-    return { ...p, bullets };
+    const next: Record<string, unknown> = {
+      ...p,
+      bullets,
+      description: description ?? null,
+      links,
+    };
+    delete next.url;
+    return next;
   });
 
   return data;
@@ -180,7 +187,7 @@ export async function extractResumeFields(rawText: string, apiKey: string): Prom
     }
 
     const parsed = JSON.parse(json) as Record<string, unknown>;
-    const sanitized = normalizeProjectBullets(sanitizeWebsiteField(parsed, rawText));
+    const sanitized = normalizeProjectFields(sanitizeWebsiteField(parsed, rawText));
     return normalizeResumeData(sanitized, rawText);
   } catch (error) {
     if (error instanceof ParseError) throw error;

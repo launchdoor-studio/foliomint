@@ -1,10 +1,13 @@
 import {
+  Apple,
   Dribbble,
   Github,
+  Gitlab,
   Globe,
   Linkedin,
   Mail,
   MessageCircle,
+  Smartphone,
   Twitter,
   Youtube,
   type LucideIcon,
@@ -40,6 +43,10 @@ export function iconForProfileLink(link: SocialLink): LucideIcon {
     return Youtube;
   if (label.includes('dribbble') || (host && (host === 'dribbble.com' || host.endsWith('.dribbble.com'))))
     return Dribbble;
+  if (label.includes('gitlab') || (host && (host === 'gitlab.com' || host.endsWith('.gitlab.com')))) return Gitlab;
+  if (label.includes('app store') || (host && (host === 'apps.apple.com' || host === 'itunes.apple.com')))
+    return Apple;
+  if (label.includes('play store') || (host && host === 'play.google.com')) return Smartphone;
   if (label.includes('discord') || (host && (host === 'discord.com' || host.endsWith('.discord.com'))))
     return MessageCircle;
   if (label.includes('email') || href.startsWith('mailto:')) return Mail;

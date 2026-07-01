@@ -30,11 +30,20 @@ export const educationSchema = z.object({
   gpa: nullableOptionalString(),
 });
 
+export const projectLinkSchema = z.object({
+  label: z.string(),
+  url: z.string(),
+});
+
 export const projectSchema = z.object({
   name: z.string(),
   /** One short line (optional). Do not put bullet lists here — use bullets[]. */
   description: nullableOptionalString(),
+  /** @deprecated Prefer links[] — kept for older portfolios. */
   url: nullableOptionalString(),
+  links: z
+    .preprocess((value) => (value === null || value === undefined ? [] : value), z.array(projectLinkSchema))
+    .optional(),
   technologies: nullableOptionalStringArray(),
   bullets: z.preprocess(
     (value) => (value === null || value === undefined ? [] : value),
@@ -91,6 +100,7 @@ export const resumeDataSchema = z.object({
 export type ResumeData = z.infer<typeof resumeDataSchema>;
 export type Experience = z.infer<typeof experienceSchema>;
 export type Education = z.infer<typeof educationSchema>;
+export type ProjectLink = z.infer<typeof projectLinkSchema>;
 export type Project = z.infer<typeof projectSchema>;
 
 export type SubscriptionStatus = 'free' | 'active' | 'trialing' | 'cancelled' | 'past_due' | 'expired';

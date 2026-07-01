@@ -1,4 +1,5 @@
 import { ParseError } from '@/lib/errors';
+import { normalizeProjectLinks } from '@/lib/project-links';
 import { resumeDataSchema, type ResumeData } from '@/types';
 
 export async function extractTextFromPdf(buffer: Buffer): Promise<string> {
@@ -201,6 +202,82 @@ export function normalizeExperienceBullets(raw: string[]): string[] {
   );
 
   return polished.slice(0, MAX_EXPERIENCE_BULLETS);
+}
+
+const MAX_PROJECT_BULLETS = 5;
+
+function splitLongTextIntoBullets(text: string): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+
+  const semicolonParts = trimmed
+    .split(/;\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (semicolonParts.length >= 2) return semicolonParts;
+
+  const dashParts = trimmed
+    .split(/\s+[–—-]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (dashParts.length >= 2 && trimmed.length > 100) return dashParts;
+
+  const sentenceParts = trimmed
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (sentenceParts.length >= 2 && trimmed.length > 120) return sentenceParts;
+
+  return [trimmed];
+}
+
+function normalizeComparable(text: string): string {
+  return text.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/** Split long project copy into concise bullets and keep description as a short tagline only. */
+export function normalizeProjectBullets(
+  rawBullets: string[],
+  description?: string | null,
+): { bullets: string[]; description?: string } {
+  const polish = (items: string[]) =>
+    items
+      .map((item) => cleanText(item))
+      .filter(Boolean)
+      .map((bullet) => bullet.charAt(0).toUpperCase() + bullet.slice(1))
+      .slice(0, MAX_PROJECT_BULLETS) as string[];
+
+  let bullets = normalizeExperienceBullets(rawBullets).slice(0, MAX_PROJECT_BULLETS);
+  let desc = description?.trim() || undefined;
+
+  if (bullets.length === 1 && bullets[0].length > 120) {
+    const split = splitLongTextIntoBullets(bullets[0]);
+    if (split.length >= 2) {
+      bullets = polish(split);
+    }
+  }
+
+  if (bullets.length === 0 && desc) {
+    const split = splitLongTextIntoBullets(desc);
+    if (split.length >= 2 || desc.length > 140) {
+      bullets = polish(split.length >= 2 ? split : [desc]);
+      desc = undefined;
+    }
+  }
+
+  if (desc && bullets.length > 0) {
+    const descNorm = normalizeComparable(desc);
+    if (bullets.some((bullet) => normalizeComparable(bullet) === descNorm)) {
+      desc = undefined;
+    } else if (desc.length > 120) {
+      desc = undefined;
+    }
+  }
+
+  return {
+    bullets,
+    ...(desc ? { description: desc } : {}),
+  };
 }
 
 function validEmail(value: unknown): string | undefined {
@@ -496,10 +573,14 @@ function fallbackProjects(sections: Map<string, string[]>): ResumeData['projects
   const entries = splitLooseEntries(lines.length > 1 ? lines : (lines[0]?.split(/\s+•\s+/) ?? []));
   return entries.map((entry) => {
     const name = entry[0] ?? 'Project';
+    const bodyLines = entry.slice(1);
+    const { bullets, description } = normalizeProjectBullets(bodyLines);
     return {
       name,
-      bullets: unique(entry.slice(1)),
+      ...(description ? { description } : {}),
+      bullets,
       technologies: [],
+      links: [],
     };
   });
 }
@@ -566,17 +647,22 @@ function normalizeProjects(value: unknown): ResumeData['projects'] {
     const name = cleanText(record.name) ?? cleanText(record.title) ?? '';
     const description = cleanText(record.description) ?? cleanText(record.summary);
     const url = normalizeUrl(record.url) ?? normalizeUrl(record.link);
+    const links = normalizeProjectLinks(record.links ?? record.urls, url);
     const technologies = stringArray(record.technologies ?? record.techStack ?? record.stack);
-    const bullets = normalizeExperienceBullets(
+    const parsedBullets = normalizeExperienceBullets(
       parseBulletList(record.bullets ?? record.highlights ?? record.details),
     );
-    if (!name && !description && !url && technologies.length === 0 && bullets.length === 0)
+    const { bullets, description: normalizedDescription } = normalizeProjectBullets(
+      parsedBullets,
+      description,
+    );
+    if (!name && !normalizedDescription && links.length === 0 && technologies.length === 0 && bullets.length === 0)
       return [];
     return [
       {
         name,
-        ...(description ? { description } : {}),
-        ...(url ? { url } : {}),
+        ...(normalizedDescription ? { description: normalizedDescription } : {}),
+        ...(links.length ? { links } : {}),
         technologies,
         bullets,
       },

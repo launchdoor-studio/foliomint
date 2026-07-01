@@ -1,4 +1,5 @@
 import { normalizePortfolioAccent } from '../portfolio-accent';
+import { getProjectLinks } from '../project-links';
 import type { PortfolioContent, PortfolioTheme } from '../types';
 import { escapeHtml, normalizeOutboundHref } from '../utils';
 
@@ -56,7 +57,13 @@ function renderClassic(content: PortfolioContent, options: ExportOptions): strin
 
   const projects = (content.projects ?? [])
     .map((p) => {
-      const url = p.url ? `<p><a href="${escapeHtml(normalizeOutboundHref(p.url))}" target="_blank" rel="noopener">${escapeHtml(p.url)}</a></p>` : '';
+      const linkButtons = getProjectLinks(p)
+        .map(
+          (link) =>
+            `<a href="${escapeHtml(normalizeOutboundHref(link.url))}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`,
+        )
+        .join(' ');
+      const links = linkButtons ? `<p class="links">${linkButtons}</p>` : '';
       const desc = p.description ? `<p>${escapeHtml(p.description)}</p>` : '';
       const bullets = p.bullets?.length
         ? `<ul>${p.bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`
@@ -65,7 +72,7 @@ function renderClassic(content: PortfolioContent, options: ExportOptions): strin
         p.technologies?.length ?
           `<p class="tags">${p.technologies.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</p>`
         : '';
-      return `<article class="item"><h3>${escapeHtml(p.name)}</h3>${desc}${url}${tech}${bullets}</article>`;
+      return `<article class="item"><h3>${escapeHtml(p.name)}</h3>${desc}${links}${tech}${bullets}</article>`;
     })
     .join('');
 
