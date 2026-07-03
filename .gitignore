@@ -38,6 +38,8 @@ next-env.d.ts
 /data/*.db
 /data/*.db-journal
 /data/*.db-wal
+/data/*.db.backup.*
+
 
 # drizzle
 /drizzle/meta
