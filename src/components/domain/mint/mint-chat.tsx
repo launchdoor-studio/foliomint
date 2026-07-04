@@ -174,20 +174,26 @@ export function MintFloatingButton() {
           </div>
         </div>
       )}
-      <button
-        type="button"
-        onClick={toggleMint}
-        aria-expanded={isOpen}
-        aria-controls="mint-chat-panel"
-        className={cn(
-          'flex items-center gap-2 rounded-full border-2 border-primary bg-background px-4 py-2.5 shadow-lg backdrop-blur-lg transition-colors',
-          isOpen ? 'bg-muted' : 'hover:bg-muted',
-        )}
-        aria-label="Open Mint assistant"
-      >
-        <MintAvatar pose="hello" size={32} />
-        <span className="text-sm font-semibold">Ask Mint</span>
-      </button>
+      <div className="flex flex-col items-center">
+        <MintAvatar
+          pose="peeking"
+          size={88}
+          className="pointer-events-none relative z-10 -mb-8"
+        />
+        <button
+          type="button"
+          onClick={toggleMint}
+          aria-expanded={isOpen}
+          aria-controls="mint-chat-panel"
+          className={cn(
+            'relative z-0 rounded-full border-2 border-primary bg-background px-5 py-2.5 shadow-lg backdrop-blur-lg transition-colors',
+            isOpen ? 'bg-muted' : 'hover:bg-muted',
+          )}
+          aria-label="Open Mint assistant"
+        >
+          <span className="text-sm font-semibold">Ask Mint</span>
+        </button>
+      </div>
     </div>
   );
 }
