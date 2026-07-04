@@ -50,6 +50,11 @@ interface DashboardOverviewProps {
   trialDaysLeft?: number | null;
 }
 
+const portfolioActionButtonClass =
+  'min-w-[5.5rem] border-border/80 bg-card shadow-[2px_2px_0_0_hsl(var(--primary))] ' +
+  'hover:bg-accent hover:text-accent-foreground dark:border-white/15 dark:bg-card ' +
+  'dark:hover:bg-accent dark:hover:text-accent-foreground';
+
 function StatCard({
   label,
   value,
@@ -229,7 +234,7 @@ export function DashboardOverview({
                 return (
                   <li
                     key={portfolio.id}
-                    className="flex flex-col gap-4 p-4 transition-colors hover:bg-muted/25 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
+                    className="flex flex-col gap-4 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4 dark:hover:bg-accent/25"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -256,35 +261,20 @@ export function DashboardOverview({
                       )}
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-                      <Button
-                        asChild
-                        variant="secondary"
-                        size="sm"
-                        className="min-w-[5.5rem] border border-transparent transition-colors hover:border-primary/35 hover:bg-primary/5"
-                      >
+                      <Button asChild variant="outline" size="sm" className={portfolioActionButtonClass}>
                         <Link href={`/editor/${portfolio.id}`}>
                           <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
                           Edit content
                         </Link>
                       </Button>
-                      <Button
-                        asChild
-                        variant="secondary"
-                        size="sm"
-                        className="min-w-[5.5rem] border border-transparent transition-colors hover:border-primary/35 hover:bg-primary/5"
-                      >
+                      <Button asChild variant="outline" size="sm" className={portfolioActionButtonClass}>
                         <Link href={`/dashboard/portfolios/${portfolio.id}/manage`}>
                           <LayoutDashboard className="mr-1.5 h-3.5 w-3.5" aria-hidden />
                           Manage portfolio
                         </Link>
                       </Button>
                       {portfolio.isPublished && (
-                        <Button
-                          asChild
-                          variant="secondary"
-                          size="sm"
-                          className="min-w-[5.5rem] border border-transparent transition-colors hover:border-primary/35 hover:bg-primary/5"
-                        >
+                        <Button asChild variant="outline" size="sm" className={portfolioActionButtonClass}>
                           <Link href={livePath} target="_blank" rel="noopener noreferrer">
                             <Globe className="mr-1.5 h-3.5 w-3.5" aria-hidden />
                             View live
