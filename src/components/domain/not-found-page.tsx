@@ -50,8 +50,9 @@ export function NotFoundPage() {
             This page was never minted
           </p>
           <p className="mx-auto mt-3 max-w-lg text-balance text-muted-foreground">
-            The link you followed doesn&apos;t exist or moved. While you&apos;re here, rebuild a
-            broken portfolio in our editor mini-game — or head back to safety.
+            The link you followed doesn&apos;t exist or moved. Rebuild the page in{' '}
+            <strong className="text-foreground">Proof Scramble</strong> — collect editor sections
+            in order, dodge 404 traps, and chase a high score.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
