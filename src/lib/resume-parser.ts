@@ -243,9 +243,9 @@ export function normalizeProjectBullets(
   const polish = (items: string[]) =>
     items
       .map((item) => cleanText(item))
-      .filter(Boolean)
+      .filter((item): item is string => Boolean(item))
       .map((bullet) => bullet.charAt(0).toUpperCase() + bullet.slice(1))
-      .slice(0, MAX_PROJECT_BULLETS) as string[];
+      .slice(0, MAX_PROJECT_BULLETS);
 
   let bullets = normalizeExperienceBullets(rawBullets).slice(0, MAX_PROJECT_BULLETS);
   let desc = description?.trim() || undefined;

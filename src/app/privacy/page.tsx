@@ -50,16 +50,16 @@ export default function PrivacyPage() {
             <ul>
               <li>Provide, maintain, and secure the Service.</li>
               <li>Process subscriptions and communicate about your account.</li>
-              <li>Improve features, including optional AI-assisted parsing when you consent.</li>
+              <li>Improve features, including Mint resume parsing, chat, and section improvements.</li>
               <li>Measure traffic and product usage where you enable analytics on your portfolio.</li>
               <li>Comply with law and enforce our terms.</li>
             </ul>
 
-            <h2>3. AI processing</h2>
+            <h2>3. Mint and resume processing</h2>
             <p>
-              If you opt in to AI-assisted resume parsing, we send relevant document text to our AI provider to
-              structure your portfolio. Do not upload documents you are not permitted to share. See in-product
-              notices for the current provider and data handling details.
+              When you upload a resume, chat with Mint, or request section improvements, we send relevant text to
+              infrastructure providers (including Groq) that power Mint. Resume files are processed in memory and not
+              stored as uploaded files. Do not upload documents you are not permitted to share.
             </p>
 
             <h2>4. Sharing</h2>

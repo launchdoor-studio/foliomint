@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 
@@ -108,6 +109,25 @@ export function EditorField({
       </div>
       <div>{children}</div>
     </div>
+  );
+}
+
+export function EditorSensitiveContactNotice() {
+  return (
+    <p
+      id="editor-contact-privacy-notice"
+      className="rounded-lg border border-border/80 bg-muted/25 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground dark:border-white/10"
+    >
+      We recommend adding an email.{' '}
+      <span className="font-semibold text-foreground">Phone numbers are more sensitive:</span> anything
+      you save here becomes part of your portfolio and may be sent to Mint (AI) when you parse a resume,
+      chat, or run improvements — as described in our{' '}
+      <Link href="/privacy" className="text-foreground underline underline-offset-2 hover:text-primary">
+        privacy policy
+      </Link>
+      . That is why many people leave phone blank and rely on email or LinkedIn instead — only add a
+      number if you are comfortable sharing it with AI processing.
+    </p>
   );
 }
 

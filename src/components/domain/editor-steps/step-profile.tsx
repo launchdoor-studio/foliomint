@@ -1,8 +1,9 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import { EditorField, EditorFormPanel } from '@/components/domain/editor-form-ui';
+import { EditorField, EditorFormPanel, EditorSensitiveContactNotice } from '@/components/domain/editor-form-ui';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
+import { MintImproveButton } from '@/components/domain/mint-improve-diff';
 import { normalizePortfolioAccent } from '@/lib/portfolio-accent';
 
 export function EditorStepProfile(ctx: EditorStepContext) {
@@ -108,6 +109,11 @@ export function EditorStepProfile(ctx: EditorStepContext) {
                 className={monoInput()}
               />
             </EditorField>
+            <MintImproveButton
+              portfolioId={state.id}
+              section="headline"
+              onApply={(patch) => updateContent((c) => ({ ...c, ...patch }))}
+            />
             <EditorField
               id="editor-profile-image"
               label="Profile image URL"
@@ -127,24 +133,39 @@ export function EditorStepProfile(ctx: EditorStepContext) {
               />
             </EditorField>
             <div className="grid gap-6 sm:grid-cols-2">
-              <EditorField id="editor-email" label="Email">
+              <EditorField
+                id="editor-email"
+                label="Email"
+                hint="Recommended for your portfolio and resume export."
+                uniformLabelStack
+              >
                 <Input
                   id="editor-email"
                   type="email"
                   value={content.email ?? ''}
                   onChange={(e) => updateContent((c) => ({ ...c, email: e.target.value || undefined }))}
                   className={monoInput()}
+                  aria-describedby="editor-contact-privacy-notice"
                 />
               </EditorField>
-              <EditorField id="editor-phone" label="Phone">
+              <EditorField
+                id="editor-phone"
+                label="Phone"
+                hint="More sensitive than email — Mint (AI) may process what you save here."
+                uniformLabelStack
+              >
                 <Input
                   id="editor-phone"
+                  type="tel"
+                  autoComplete="tel"
                   value={content.phone ?? ''}
                   onChange={(e) => updateContent((c) => ({ ...c, phone: e.target.value || undefined }))}
                   className={monoInput()}
+                  aria-describedby="editor-contact-privacy-notice"
                 />
               </EditorField>
             </div>
+            <EditorSensitiveContactNotice />
             <EditorField id="editor-location" label="Location">
               <Input
                 id="editor-location"
@@ -192,6 +213,11 @@ export function EditorStepProfile(ctx: EditorStepContext) {
                 placeholder="A brief professional summary…"
               />
             </EditorField>
+            <MintImproveButton
+              portfolioId={state.id}
+              section="bio"
+              onApply={(patch) => updateContent((c) => ({ ...c, ...patch }))}
+            />
           </>
         ) : (
           <p className="font-mono text-sm text-muted-foreground">

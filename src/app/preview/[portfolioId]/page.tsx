@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 
@@ -14,7 +15,7 @@ interface Props {
 
 export default async function PortfolioPreviewPage({ params }: Props) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     redirect(`/sign-in?callbackUrl=${encodeURIComponent(`/preview/${params.portfolioId}`)}`);
   }
 

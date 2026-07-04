@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+import { isDevAuthBypassed } from '@/lib/dev-mode';
+
 export async function middleware(request: NextRequest) {
-  if (process.env.NEXTAUTH_DEV_BYPASS === 'true') {
+  if (isDevAuthBypassed()) {
     return NextResponse.next();
   }
 

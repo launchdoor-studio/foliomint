@@ -65,7 +65,7 @@ export default function TermsPage() {
             <p>
               The Service is provided &quot;as is&quot; without warranties of any kind, express or implied, to the
               fullest extent permitted by law. We do not warrant that the Service will be uninterrupted or
-              error-free, or that AI-assisted features will produce accurate or complete results.
+              error-free, or that Mint-assisted features will produce accurate or complete results.
             </p>
 
             <h2>6. Limitation of liability</h2>

@@ -4,32 +4,30 @@ import { eq } from 'drizzle-orm';
 
 import { getUserTier } from '@/lib/access';
 import { getCurrentUser } from '@/lib/auth';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
+import { ensureDevUser } from '@/lib/dev-user';
 import { db } from '@/lib/db';
-import { portfolios, users } from '@/lib/db/schema';
+import { portfolios } from '@/lib/db/schema';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 import { createBlankPortfolioContent } from '@/lib/portfolio-content';
 
 export async function POST() {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
   const userId = appUser?.id ?? 'dev-user';
   const userEmail = appUser?.email ?? 'dev@example.com';
 
-  let user = await db.select().from(users).where(eq(users.id, userId)).get();
+  const user = await ensureDevUser({
+    id: userId,
+    email: userEmail,
+    name: appUser?.name ?? 'Dev User',
+  });
 
   if (!user) {
-    if (process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-    await db.insert(users).values({
-      id: userId,
-      email: userEmail,
-      name: appUser?.name ?? 'Dev User',
-    });
-    user = await db.select().from(users).where(eq(users.id, userId)).get();
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
   const tier = isPaymentGatingBypassed() ? 'pro' : await getUserTier(userId);

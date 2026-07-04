@@ -2,12 +2,32 @@
 
 Thanks for your interest in FolioMint. Whether you are fixing a typo, reporting a bug, or opening a pull request, you are welcome here.
 
-This guide covers how to run the app locally and how the repo is organized. Product direction and BYOK AI model: [SPEC.md](./SPEC.md). Implementation tasks: [TODO.md](./TODO.md).
+This guide covers how to run the app locally and how the repo is organized. Product direction: [SPEC.md](./SPEC.md). Implementation tasks: [TODO.md](./TODO.md).
 
 ## Before you start
 
-- Use a recent LTS version of Node.js if you can.
-- Copy `.env.example` to `.env.local` and fill in what you need. You do not have to configure every integration on day one. Local defaults in `.env.example` are there so you can get the app running without a full production stack.
+- **Node.js 22 LTS** (see `.nvmrc`). Node 26+ is not supported yet and will break native addons if present.
+- You can use **npm** (recommended, matches CI) or **bun**. If `bun install` fails on an old lockfile, delete `node_modules` and `bun.lock`, then run `bun install` again.
+- Copy `.env.example` to `.env.local`. For quick local testing without OAuth, Groq, or billing, keep **`LOCAL_DEV_MODE=true`** (default in `.env.example`).
+
+## Quick local test (no OAuth, no Groq key)
+
+With `LOCAL_DEV_MODE=true` in `.env.local`:
+
+- Signed in automatically as **Dev User** (`dev@example.com`)
+- **Pro** limits and features unlocked
+- **AI parsing, Mint chat, and Improve** use dev stubs when `GROQ_API_KEY` is empty (add a key for real Groq responses)
+
+```bash
+nvm use
+mkdir -p data
+cp .env.example .env.local   # if you have not already
+npm install
+npm run db:push
+npm run dev
+```
+
+Then open `/generate` → **Start blank portfolio** or upload a resume, or go straight to `/dashboard`.
 
 ## Stack (for orientation)
 
@@ -18,7 +38,7 @@ This guide covers how to run the app locally and how the repo is organized. Prod
 - **Auth**: Auth.js/NextAuth v5 (GitHub, Google/Gmail, LinkedIn)
 - **Forms**: React Hook Form and Zod
 - **State**: Zustand
-- **AI parsing**: Groq with encrypted BYOK support and tiered platform limits
+- **AI parsing**: Groq platform key with tiered usage limits; Mint assistant and section improvements
 - **Payments**: Lemon Squeezy monthly subscriptions, Checkout, and webhooks
 - **Emails**: Resend (optional, for portfolio publish notifications)
 - **Blog**: Markdown posts per portfolio
@@ -30,12 +50,13 @@ This guide covers how to run the app locally and how the repo is organized. Prod
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local: at minimum NEXTAUTH_SECRET and database URL
-# Optional dev-only: GROQ_API_KEY (platform key for local testing without BYOK setup)
-# Optional OAuth: AUTH_GITHUB_ID, AUTH_GOOGLE_ID, AUTH_LINKEDIN_ID (or NEXTAUTH_DEV_BYPASS=true)
-# BYPASS_PAYMENT_GATING=true in .env.example helps local dev without Lemon Squeezy
+# Edit .env.local: at minimum NEXTAUTH_SECRET, GROQ_API_KEY, and DATABASE_URL
+# Optional OAuth: AUTH_GITHUB_ID, AUTH_GOOGLE_ID, AUTH_LINKEDIN_ID
+# (not needed when LOCAL_DEV_MODE=true)
 
-npm install
+nvm use          # Node 22 from .nvmrc
+mkdir -p data
+npm install      # or: bun install (regenerate bun.lock if it lists better-sqlite3)
 npm run db:push
 npm run dev
 ```
@@ -62,8 +83,7 @@ src/
 │   ├── db/               # Drizzle schema + client
 │   ├── auth.ts           # NextAuth configuration
 │   ├── groq.ts           # Groq AI integration (BYOK)
-│   ├── ai-credentials.ts # User AI key storage
-│   ├── ai-key-encryption.ts
+│   ├── ai-credentials.ts # Platform Groq key resolver
 │   ├── resume-parser.ts  # PDF/DOCX text extraction
 │   ├── errors.ts         # Typed error classes
 │   └── utils.ts          # Shared utilities

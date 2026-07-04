@@ -8,6 +8,8 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+import type { CheckoutPlan } from '@/lib/launch-offer';
+
 interface PricingProCtaProps {
   className?: string;
   variant?: 'default' | 'outline';
@@ -16,6 +18,8 @@ interface PricingProCtaProps {
   label?: string;
   /** Path users return to after signing in to complete checkout. */
   signInCallbackUrl?: string;
+  /** Lemon Squeezy plan to start checkout for. */
+  checkoutPlan?: CheckoutPlan;
 }
 
 export function PricingProCta({
@@ -24,6 +28,7 @@ export function PricingProCta({
   size = 'lg',
   label = 'Start Pro',
   signInCallbackUrl = '/pricing',
+  checkoutPlan = 'pro_monthly',
 }: PricingProCtaProps) {
   const router = useRouter();
   const { status } = useSession();
@@ -40,6 +45,8 @@ export function PricingProCta({
       const res = await fetch('/api/checkout', {
         method: 'POST',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: checkoutPlan }),
       });
       const data = (await res.json()) as { url?: string; error?: string; hint?: string };
       if (!res.ok) {

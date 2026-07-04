@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { and, desc, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
@@ -23,7 +24,7 @@ interface Ctx {
 
 export async function GET(_request: Request, { params }: Ctx) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
@@ -50,7 +51,7 @@ export async function GET(_request: Request, { params }: Ctx) {
 
 export async function POST(request: Request, { params }: Ctx) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 

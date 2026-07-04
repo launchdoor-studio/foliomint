@@ -3,10 +3,34 @@ import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
 import LinkedIn from 'next-auth/providers/linkedin';
 
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { getEnabledOAuthProviders } from '@/lib/auth-providers';
 
-process.env.AUTH_URL ||= process.env.NEXTAUTH_URL;
-process.env.AUTH_SECRET ||= process.env.NEXTAUTH_SECRET;
+/** Only assign when the value exists — `process.env.X ||= undefined` becomes the string "undefined". */
+function syncAuthEnv(from: 'NEXTAUTH_URL' | 'NEXTAUTH_SECRET', to: 'AUTH_URL' | 'AUTH_SECRET') {
+  const value = process.env[from];
+  if (!value || value === 'undefined') return;
+  const current = process.env[to];
+  if (!current || current === 'undefined') {
+    process.env[to] = value;
+  }
+}
+
+syncAuthEnv('NEXTAUTH_URL', 'AUTH_URL');
+syncAuthEnv('NEXTAUTH_SECRET', 'AUTH_SECRET');
+
+if (process.env.NODE_ENV === 'development') {
+  const devUrl = 'http://localhost:3000';
+  if (!process.env.AUTH_URL || process.env.AUTH_URL === 'undefined') {
+    process.env.AUTH_URL = devUrl;
+  }
+  if (!process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL === 'undefined') {
+    process.env.NEXTAUTH_URL = process.env.AUTH_URL;
+  }
+  if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET === 'undefined') {
+    process.env.AUTH_SECRET = 'dev-secret-do-not-use-in-prod';
+  }
+}
 
 const providers: NextAuthConfig['providers'] = [];
 
@@ -56,7 +80,7 @@ export const authConfig = {
   },
   callbacks: {
     authorized({ auth }) {
-      if (process.env.NEXTAUTH_DEV_BYPASS === 'true') {
+      if (isDevAuthBypassed()) {
         return true;
       }
       return !!auth?.user;

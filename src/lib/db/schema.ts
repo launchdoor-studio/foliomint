@@ -148,7 +148,7 @@ export const aiUsageEvents = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     portfolioId: text('portfolio_id').references(() => portfolios.id, { onDelete: 'set null' }),
-    kind: text('kind').$type<'parse' | 'rewrite' | 'suggestion'>().notNull(),
+    kind: text('kind').$type<'parse' | 'rewrite' | 'suggestion' | 'mint_chat' | 'export'>().notNull(),
     provider: text('provider').notNull().default('groq'),
     model: text('model'),
     inputTokens: integer('input_tokens').default(0).notNull(),

@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
+import { TrialBanner } from '@/components/domain/trial-banner';
 import { cn } from '@/lib/utils';
 
 type PortfolioRow = {
@@ -46,6 +47,7 @@ interface DashboardOverviewProps {
     variant: PlanVariant;
   };
   showUpgradeCta: boolean;
+  trialDaysLeft?: number | null;
 }
 
 function StatCard({
@@ -89,9 +91,13 @@ export function DashboardOverview({
   portfolios,
   plan,
   showUpgradeCta,
+  trialDaysLeft,
 }: DashboardOverviewProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      {typeof trialDaysLeft === 'number' && trialDaysLeft > 0 && (
+        <TrialBanner daysLeft={trialDaysLeft} />
+      )}
       {checkout === 'dev-bypass' && process.env.NODE_ENV !== 'production' && (
         <p className="mb-8 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
           This environment uses relaxed limits for local testing. Use a paid plan when you ship to users.

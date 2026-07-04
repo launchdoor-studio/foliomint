@@ -12,6 +12,7 @@ import {
   Pencil,
   ExternalLink,
   Trash2,
+  Download,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -166,6 +167,25 @@ export default function PortfolioManagePage() {
                   <Link href={`/editor/${id}`}>Go to editor to publish</Link>
                 </Button>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/80 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Download className="h-5 w-5" aria-hidden />
+              </div>
+              <CardTitle className="text-lg">Resume PDF</CardTitle>
+              <CardDescription>
+                Download a resume that matches your current portfolio content.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="outline" className="w-full sm:w-auto">
+                <a href={`/api/portfolios/${id}/export/resume`} download>
+                  Download resume PDF
+                </a>
+              </Button>
             </CardContent>
           </Card>
 

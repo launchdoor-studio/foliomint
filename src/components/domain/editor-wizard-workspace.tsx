@@ -5,42 +5,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Loader2, Save } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { EDITOR_WIZARD_STEP_COUNT, EDITOR_WIZARD_STEPS } from '@/lib/editor-wizard-steps';
 import { cn } from '@/lib/utils';
 
-export const EDITOR_WIZARD_STEPS = [
-  {
-    id: 'profile',
-    title: 'Profile & appearance',
-    description: 'Accent color, portfolio title, contact details, and your introduction.',
-  },
-  {
-    id: 'skills',
-    title: 'Skills',
-    description: 'Add strengths and tools—visitors see these as tags on your site.',
-  },
-  {
-    id: 'experience',
-    title: 'Experience',
-    description: 'Roles, dates, locations, and bullet highlights.',
-  },
-  {
-    id: 'education',
-    title: 'Education',
-    description: 'Schools, degrees, and dates.',
-  },
-  {
-    id: 'projects',
-    title: 'Projects',
-    description: 'Links, summaries, tech stacks, and extra bullets.',
-  },
-  {
-    id: 'more',
-    title: 'Awards & more',
-    description: 'Honors, extracurricular blocks, and custom sections.',
-  },
-] as const;
-
-export const EDITOR_WIZARD_STEP_COUNT = EDITOR_WIZARD_STEPS.length;
+export { EDITOR_WIZARD_STEP_COUNT, EDITOR_WIZARD_STEPS } from '@/lib/editor-wizard-steps';
 
 export function EditorWizardWorkspace({
   stepIndex,

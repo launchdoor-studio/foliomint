@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
@@ -19,7 +20,7 @@ const bodySchema = z.object({
 
 export async function GET() {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
@@ -35,7 +36,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 

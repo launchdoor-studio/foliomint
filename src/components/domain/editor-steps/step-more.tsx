@@ -21,7 +21,7 @@ export function EditorStepMore(ctx: EditorStepContext) {
   return (
     <div className="space-y-6">
       {hasSuggestions && (
-        <EditorFormPanel title="AI portfolio suggestions">
+        <EditorFormPanel title="Mint portfolio suggestions">
           <div className="space-y-5 font-mono text-sm">
             {suggestions?.heroTagline && (
               <div>

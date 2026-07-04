@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: '%s | FolioMint',
   },
   description:
-    'Turn resume raw material into a hosted proof-of-work portfolio with AI-assisted structure, editable themes, analytics, and custom domains.',
+    'Turn resume raw material into a hosted proof-of-work portfolio with Mint-assisted structure, editable themes, analytics, and custom domains.',
   keywords: [
     'portfolio',
     'resume',

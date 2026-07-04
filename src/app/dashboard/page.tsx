@@ -1,10 +1,13 @@
 import { redirect } from 'next/navigation';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { and, eq, sql } from 'drizzle-orm';
 
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { integrations, portfolios, users, viewLogs } from '@/lib/db/schema';
+import { getUserTier } from '@/lib/access';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
+import { expireTrialIfNeeded, getTrialDaysLeft } from '@/lib/signup-trial';
 import { Navbar } from '@/components/domain/navbar';
 import { DashboardOverview } from '@/components/domain/dashboard-overview';
 
@@ -42,6 +45,12 @@ function getPlanDisplay(
   switch (sub) {
     case 'active':
       return { name: 'Pro', detail: 'Unlimited parses and premium features', variant: 'pro' };
+    case 'trialing':
+      return {
+        name: 'Pro trial',
+        detail: 'Full Pro access during your launch trial',
+        variant: 'pro',
+      };
     case 'past_due':
       return {
         name: 'Pro',
@@ -59,13 +68,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const checkout = firstString(searchParams?.checkout);
 
   const user = await getCurrentUser();
-  if (!user && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!user && !isDevAuthBypassed()) {
     redirect(`/sign-in?callbackUrl=${encodeURIComponent('/dashboard')}`);
   }
 
   const userId = user?.id ?? 'dev-user';
 
-  const [userPortfolios, viewStats, publishedStats, integrationStats, dbUser] = await Promise.all([
+  if (user) {
+    await expireTrialIfNeeded(userId);
+  }
+
+  const [userPortfolios, viewStats, publishedStats, integrationStats, dbUser, trialDaysLeft] =
+    await Promise.all([
     db
       .select({
         id: portfolios.id,
@@ -102,6 +116,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       .where(eq(integrations.userId, userId))
       .get(),
     db.select().from(users).where(eq(users.id, userId)).get(),
+    user ? getTrialDaysLeft(userId) : Promise.resolve(null),
   ]);
 
   const totalViews = viewStats?.totalViews ?? 0;
@@ -111,9 +126,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const bypass = isPaymentGatingBypassed();
   const sub = dbUser?.subscriptionStatus ?? 'free';
   const plan = getPlanDisplay(bypass, sub);
+  const tier = bypass ? 'pro' : await getUserTier(userId);
 
   const showUpgradeCta =
-    !bypass && sub !== 'active' && sub !== 'past_due';
+    !bypass && tier === 'free' && sub !== 'past_due';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -129,6 +145,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           portfolios={userPortfolios}
           plan={plan}
           showUpgradeCta={showUpgradeCta}
+          trialDaysLeft={trialDaysLeft}
         />
       </main>
     </div>

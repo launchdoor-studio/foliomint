@@ -2,6 +2,8 @@
 
 Primary product: the Next.js web app at the repository root. FolioMint deploys to Vercel, uses Turso/libSQL for data, Groq for AI, Auth.js for OAuth, and Lemon Squeezy for monthly subscriptions.
 
+**Beta release:** see [BETA.md](./BETA.md) for the full closed/public beta checklist, env vars, and manual test plan.
+
 ## Run & build
 
 ```bash
@@ -25,5 +27,6 @@ npm run dev
 - [ ] Add LinkedIn OAuth credentials in production (`AUTH_LINKEDIN_ID`, `AUTH_LINKEDIN_SECRET`).
 - [ ] Tune Groq prompts against real resumes and portfolio examples.
 - [ ] Expand portfolio theme presets and editor customization controls.
-- [ ] Add webhook idempotency storage for Lemon Squeezy events.
+- [ ] Implement custom domain host routing (middleware / Vercel config).
 - [ ] Run visual QA for neubrutalist light/dark across marketing, dashboard, editor, pricing, and public portfolios.
+- [ ] Swap placeholder Mint SVG assets in `public/mint/` for final mascot art.

@@ -1,12 +1,14 @@
 import Link from 'next/link';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { redirect } from 'next/navigation';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { ArrowLeft, BarChart3 } from 'lucide-react';
 
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { portfolios, users, viewLogs } from '@/lib/db/schema';
-import { isPaymentGatingBypassed } from '@/lib/feature-flags';
+import { portfolios, viewLogs } from '@/lib/db/schema';
+import { userHasProAccess } from '@/lib/access';
+import { expireTrialIfNeeded } from '@/lib/signup-trial';
 import { Navbar } from '@/components/domain/navbar';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
 import { Badge } from '@/components/ui/badge';
@@ -31,21 +33,19 @@ function getSince(window: string | undefined): Date | null {
 
 export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps) {
   const user = await getCurrentUser();
-  if (!user && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!user && !isDevAuthBypassed()) {
     redirect(`/sign-in?callbackUrl=${encodeURIComponent('/dashboard/analytics')}`);
   }
 
   const userId = user?.id ?? 'dev-user';
   const window = firstString(searchParams?.w) ?? '30d';
   const since = getSince(window);
-  const bypass = isPaymentGatingBypassed();
 
-  const dbUser = await db
-    .select({ subscriptionStatus: users.subscriptionStatus })
-    .from(users)
-    .where(eq(users.id, userId))
-    .get();
-  const hasAdvancedAnalytics = bypass || dbUser?.subscriptionStatus === 'active';
+  if (user) {
+    await expireTrialIfNeeded(userId);
+  }
+
+  const hasAdvancedAnalytics = await userHasProAccess(userId);
 
   const userPortfolios = await db
     .select({

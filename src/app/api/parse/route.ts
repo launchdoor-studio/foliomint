@@ -3,42 +3,37 @@ import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 
 import { canUseAiFeature, getUserTier } from '@/lib/access';
-import { resolveParsingApiKey } from '@/lib/ai-credentials';
+import { resolvePlatformGroqApiKey } from '@/lib/ai-credentials';
 import { getCurrentUser } from '@/lib/auth';
+import { buildMockResumeFromText } from '@/lib/dev-mock-ai';
+import { isDevAuthBypassed, shouldUseDevMockAi } from '@/lib/dev-mode';
+import { ensureDevUser } from '@/lib/dev-user';
 import { db } from '@/lib/db';
-import { aiUsageEvents, portfolios, users } from '@/lib/db/schema';
+import { aiUsageEvents, portfolios } from '@/lib/db/schema';
+import { ParseError } from '@/lib/errors';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 import { extractResumeFields } from '@/lib/groq';
-import { extractTextFromFile, buildFallbackResumeData } from '@/lib/resume-parser';
+import { extractTextFromFile } from '@/lib/resume-parser';
 
 export async function POST(request: Request) {
   try {
     const appUser = await getCurrentUser();
 
-    if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+    if (!appUser && !isDevAuthBypassed()) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const userId = appUser?.id ?? 'dev-user';
     const userEmail = appUser?.email ?? 'dev@example.com';
 
-    let user = await db.select().from(users).where(eq(users.id, userId)).get();
+    const user = await ensureDevUser({
+      id: userId,
+      email: userEmail,
+      name: appUser?.name ?? 'Dev User',
+    });
 
     if (!user) {
-      if (process.env.NEXTAUTH_DEV_BYPASS === 'true') {
-        await db.insert(users).values({
-          id: userId,
-          email: userEmail,
-          name: appUser?.name ?? 'Dev User',
-        });
-
-        user = await db.select().from(users).where(eq(users.id, userId)).get();
-        if (!user) {
-          return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
-      } else {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
-      }
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const userTier = isPaymentGatingBypassed() ? 'pro' : await getUserTier(userId);
@@ -66,33 +61,31 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const consent = formData.get('consent') === 'true';
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const apiKey = consent ? await resolveParsingApiKey(userId) : null;
-
-    if (consent && !(await canUseAiFeature(userId, 'parse'))) {
+    const apiKey = resolvePlatformGroqApiKey();
+    const useMockAi = shouldUseDevMockAi();
+    if (!apiKey && !useMockAi) {
       return NextResponse.json(
         {
-          error:
-            "You have reached today's AI parsing limit. You can still create or edit your portfolio manually, or upgrade for higher limits.",
-          code: 'AI_PARSE_LIMIT_REACHED',
+          error: 'Mint parsing is temporarily unavailable. Please try again later.',
+          code: 'AI_UNAVAILABLE',
         },
-        { status: 403 },
+        { status: 503 },
       );
     }
 
-    if (consent && !apiKey) {
+    if (!(await canUseAiFeature(userId, 'parse'))) {
       return NextResponse.json(
         {
           error:
-            'AI parsing requires your own Groq API key. Add one in Settings before uploading with AI enabled.',
-          code: 'AI_KEY_REQUIRED',
+            'You have reached your Mint parsing limit. Upgrade to Pro for higher limits, or try again later.',
+          code: 'AI_PARSE_LIMIT_REACHED',
         },
-        { status: 400 },
+        { status: 403 },
       );
     }
 
@@ -100,16 +93,16 @@ export async function POST(request: Request) {
     const rawText = await extractTextFromFile(buffer, file.type);
 
     let resumeData;
-    let aiParseSucceeded = false;
-    if (consent && apiKey) {
-      try {
-        resumeData = await extractResumeFields(rawText, apiKey);
-        aiParseSucceeded = true;
-      } catch {
-        resumeData = buildFallbackResumeData(rawText);
-      }
-    } else {
-      resumeData = buildFallbackResumeData(rawText);
+    try {
+      resumeData = useMockAi
+        ? buildMockResumeFromText(rawText, appUser?.name ?? user.name ?? undefined)
+        : await extractResumeFields(rawText, apiKey!);
+    } catch (error) {
+      const message =
+        error instanceof ParseError
+          ? error.message
+          : 'Mint could not parse your resume. Please check your file and try again.';
+      return NextResponse.json({ error: message, code: 'AI_PARSE_FAILED' }, { status: 422 });
     }
 
     const portfolioId = nanoid(12);
@@ -126,20 +119,18 @@ export async function POST(request: Request) {
       slug,
       title: `${resumeData.name}'s Portfolio`,
       content: resumeData as unknown as Record<string, unknown>,
-      groqConsent: consent,
+      groqConsent: true,
       expiresAt: isPaid ? null : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
     });
 
-    if (consent) {
-      await db.insert(aiUsageEvents).values({
-        id: nanoid(12),
-        userId,
-        portfolioId,
-        kind: 'parse',
-        model: apiKey ? 'llama-3.3-70b-versatile' : null,
-        succeeded: aiParseSucceeded,
-      });
-    }
+    await db.insert(aiUsageEvents).values({
+      id: nanoid(12),
+      userId,
+      portfolioId,
+      kind: 'parse',
+      model: useMockAi ? 'dev-mock' : 'llama-3.3-70b-versatile',
+      succeeded: true,
+    });
 
     return NextResponse.json({ portfolioId, slug });
   } catch (error) {

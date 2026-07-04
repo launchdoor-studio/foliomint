@@ -2,9 +2,8 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutDashboard, Save, Eye, Globe, Loader2 } from 'lucide-react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { LayoutDashboard, Save, Eye, Globe, Loader2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { toastAfterPortfolioSave } from '@/lib/editor-save-toast';
@@ -15,8 +14,8 @@ import { integrationToSocialLink } from '@/lib/social-links';
 import type { SocialLink } from '@/lib/social-links';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditorLivePreview } from '@/components/domain/editor-live-preview';
+import { EditorLivePreviewPanel } from '@/components/domain/editor-live-preview-panel';
 import { EditorStepPanels } from '@/components/domain/editor-step-panels';
 import { EditorWizardWorkspace } from '@/components/domain/editor-wizard-workspace';
 import {
@@ -24,6 +23,17 @@ import {
 } from '@/components/domain/post-publish-checklist';
 import { editorMonoControlClass } from '@/components/domain/editor-form-ui';
 import { Navbar } from '@/components/domain/navbar';
+import { useMintOptional } from '@/components/domain/mint/mint-provider';
+import {
+  ResumeHealthDock,
+  ResumeHealthToolbarToggle,
+} from '@/components/domain/resume-health-panel';
+import { useEditorToolbarHeight } from '@/hooks/use-editor-toolbar-height';
+import { assistantDockMarginClass } from '@/lib/assistant-dock';
+import { TrialBanner } from '@/components/domain/trial-banner';
+import { scoreResumeHealth } from '@/lib/resume-health';
+import { buildMintResumeHealthSnapshot } from '@/lib/mint/resume-health-guidance';
+import { EDITOR_WIZARD_STEPS } from '@/lib/editor-wizard-steps';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
 import { cn } from '@/lib/utils';
 import type { EditorPageState } from '@/types/editor-page';
@@ -34,8 +44,14 @@ const PORTFOLIO_THEME_LABEL = 'Neubrutalism';
 export default function EditorPage() {
   const params = useParams<{ portfolioId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mint = useMintOptional();
   const [state, setState] = useState<EditorPageState | null>(null);
   const [tier, setTier] = useState<'free' | 'pro'>('pro');
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [healthPanelOpen, setHealthPanelOpen] = useState(false);
+
+  useEditorToolbarHeight();
   const [integrationSocialLinks, setIntegrationSocialLinks] = useState<SocialLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,8 +96,16 @@ export default function EditorPage() {
         }
         setState(loaded);
         saveBaselineRef.current = serializeEditorPageState(loaded);
-        const me = await fetch('/api/me', { credentials: 'include' }).then((r) => r.json() as Promise<{ tier?: string }>);
+        const me = await fetch('/api/me', { credentials: 'include' }).then(
+          (r) =>
+            r.json() as Promise<{ tier?: string; trialDaysLeft?: number | null }>,
+        );
         setTier(me.tier === 'pro' ? 'pro' : 'free');
+        setTrialDaysLeft(me.trialDaysLeft ?? null);
+        if (searchParams.get('from') === 'parse') {
+          setHealthPanelOpen(true);
+          router.replace(`/editor/${id}`, { scroll: false });
+        }
 
         const integrationsRes = await fetch('/api/integrations', { credentials: 'include' });
         if (integrationsRes.ok) {
@@ -107,7 +131,28 @@ export default function EditorPage() {
     };
 
     void load();
-  }, [params.portfolioId, router]);
+  }, [params.portfolioId, router, searchParams]);
+
+  useEffect(() => {
+    if (!mint || !state) return;
+    const step = EDITOR_WIZARD_STEPS[wizardStep];
+    const health = scoreResumeHealth(state.content);
+    mint.setPageContext({
+      editorStep: step?.id,
+      portfolioId: state.id,
+      hasPortfolio: true,
+      isPublished: state.isPublished,
+      resumeHealth: buildMintResumeHealthSnapshot(state.content, health),
+    });
+  }, [mint, state, wizardStep]);
+
+  useEffect(() => {
+    if (!mint || !state?.content || wizardStep !== 0) return;
+    if (healthPanelOpen) return;
+    if (!state.content.bio?.trim()) {
+      mint.setNudge('Want help writing your intro? Ask Mint anytime.');
+    }
+  }, [mint, state?.content, state?.id, wizardStep, healthPanelOpen]);
 
   const handleSave = async (updates?: Partial<EditorPageState>) => {
     if (!state) return;
@@ -201,6 +246,8 @@ export default function EditorPage() {
     saveBaselineRef.current !== null &&
     serializeEditorPageState(state) !== saveBaselineRef.current;
 
+  const resumeHealth = scoreResumeHealth(content);
+
   const editorWorkspace = (
     <EditorWizardWorkspace
       stepIndex={wizardStep}
@@ -209,42 +256,23 @@ export default function EditorPage() {
       onSavePortfolio={() => void handleSave()}
       savePending={saving}
       preview={
-        <Card
-          className={cn(
-            previewCardClass,
-            'flex max-h-[min(52vh,520px)] min-h-[260px] flex-col overflow-hidden sm:max-h-[min(640px,calc(100vh-9rem))] lg:max-h-[min(720px,calc(100vh-8.5rem))] lg:min-h-[280px]',
-          )}
+        <EditorLivePreviewPanel
+          stepKey={wizardStep}
+          themeLabel={PORTFOLIO_THEME_LABEL}
+          cardClassName={previewCardClass}
+          titleClassName={editorCardTitleClass}
         >
-          <CardHeader className="shrink-0 space-y-1 border-b border-border/60 bg-background/80 pb-4 dark:border-white/10">
-            <CardTitle className={editorCardTitleClass}>Live preview</CardTitle>
-            <p className="font-sans text-xs text-muted-foreground">
-              Updates as you type. Theme: {PORTFOLIO_THEME_LABEL} — matches what visitors
-              see (they can switch light/dark on the published site).
-            </p>
-          </CardHeader>
-          <CardContent className="relative min-h-0 flex-1 overflow-y-auto bg-background px-4 py-4 sm:px-5">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={wizardStep}
-                initial={{ opacity: 0.72, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0.5, y: -4 }}
-                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <EditorLivePreview
-                  content={content}
-                  slug={state.slug}
-                  publicHandle={state.publicHandle}
-                  theme={ACTIVE_PORTFOLIO_THEME}
-                  accentColor={state.accentColor}
-                  isPublished={state.isPublished}
-                  portfolioId={state.id}
-                  socialLinks={integrationSocialLinks}
-                />
-              </motion.div>
-            </AnimatePresence>
-          </CardContent>
-        </Card>
+          <EditorLivePreview
+            content={content}
+            slug={state.slug}
+            publicHandle={state.publicHandle}
+            theme={ACTIVE_PORTFOLIO_THEME}
+            accentColor={state.accentColor}
+            isPublished={state.isPublished}
+            portfolioId={state.id}
+            socialLinks={integrationSocialLinks}
+          />
+        </EditorLivePreviewPanel>
       }
     >
       <EditorStepPanels stepIndex={wizardStep} ctx={stepContext} />
@@ -257,7 +285,10 @@ export default function EditorPage() {
 
       <div className="flex-1">
         {/* Editor toolbar */}
-        <div className="sticky top-16 z-40 border-b bg-background/80 backdrop-blur-lg">
+        <div
+          id="editor-toolbar"
+          className="sticky top-16 z-40 border-b-2 border-foreground bg-background/90 backdrop-blur-lg"
+        >
           <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2 sm:px-6 lg:px-8">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="text-sm text-muted-foreground">Edit content</span>
@@ -295,6 +326,11 @@ export default function EditorPage() {
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              <ResumeHealthToolbarToggle
+                open={healthPanelOpen}
+                onToggle={() => setHealthPanelOpen((open) => !open)}
+                health={resumeHealth}
+              />
               <span className="hidden rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground sm:inline">
                 {PORTFOLIO_THEME_LABEL}
               </span>
@@ -316,6 +352,16 @@ export default function EditorPage() {
                   </Link>
                 </Button>
               )}
+              <Button asChild variant="outline" size="sm">
+                <a
+                  href={`/api/portfolios/${state.id}/export/resume`}
+                  download
+                  title="Download resume PDF matching your portfolio content"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Resume PDF
+                </a>
+              </Button>
               <Button
                 variant={state.isPublished ? 'outline' : 'default'}
                 size="sm"
@@ -342,6 +388,18 @@ export default function EditorPage() {
           </div>
         </div>
 
+        {typeof trialDaysLeft === 'number' && trialDaysLeft > 0 && (
+          <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+            <TrialBanner daysLeft={trialDaysLeft} />
+          </div>
+        )}
+
+        <div
+          className={cn(
+            'transition-[margin] duration-300 ease-out',
+            healthPanelOpen && assistantDockMarginClass,
+          )}
+        >
         {/* Published: slim banner under toolbar (discovery) + full checklist after wizard */}
         {state.isPublished ? (
           <Suspense fallback={editorWorkspace}>
@@ -357,6 +415,15 @@ export default function EditorPage() {
         ) : (
           editorWorkspace
         )}
+        </div>
+
+        <ResumeHealthDock
+          open={healthPanelOpen}
+          onOpenChange={setHealthPanelOpen}
+          content={content}
+          health={resumeHealth}
+          chrome="editor"
+        />
       </div>
     </div>
   );

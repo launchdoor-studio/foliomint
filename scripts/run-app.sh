@@ -62,7 +62,7 @@ fi
 if [[ ! -f .env.local ]]; then
   if [[ -f .env.example ]]; then
     cp .env.example .env.local
-    echo "Created .env.local from .env.example — edit it with your keys (GROQ_API_KEY, NEXTAUTH_SECRET, OAuth, etc.)."
+    echo "Created .env.local from .env.example (LOCAL_DEV_MODE=true for auth/Pro/mock-AI bypass)."
   else
     echo "warning: no .env.local and no .env.example; create .env.local before relying on auth or AI features." >&2
   fi

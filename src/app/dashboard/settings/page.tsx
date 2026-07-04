@@ -1,15 +1,16 @@
 import Link from 'next/link';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { redirect } from 'next/navigation';
 import { ArrowLeft, Settings } from 'lucide-react';
 
-import { AiKeySettings } from '@/components/domain/ai-key-settings';
+import { MintAvatar } from '@/components/domain/mint/mint-avatar';
 import { Navbar } from '@/components/domain/navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrentUser } from '@/lib/auth';
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
-  if (!user && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!user && !isDevAuthBypassed()) {
     redirect(`/sign-in?callbackUrl=${encodeURIComponent('/dashboard/settings')}`);
   }
 
@@ -33,11 +34,31 @@ export default async function SettingsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-              <p className="mt-1 text-muted-foreground">Account, AI parsing, and billing.</p>
+              <p className="mt-1 text-muted-foreground">Account, Mint assistant, and billing.</p>
             </div>
           </div>
 
-          <AiKeySettings />
+          <Card className="mt-6">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <MintAvatar pose="hello" size={40} />
+                <div>
+                  <CardTitle className="text-lg">Mint assistant</CardTitle>
+                  <CardDescription>
+                    Mint is built into FolioMint — use the &quot;Ask Mint&quot; button on Generate,
+                    Dashboard, and the editor for help with publishing, handles, resume parsing, and
+                    resume export.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Mint handles resume parsing, chat, and section improvements. Your tier controls usage
+                limits — no API key setup required.
+              </p>
+            </CardContent>
+          </Card>
 
           <Card className="mt-4">
             <CardHeader>

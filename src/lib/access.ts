@@ -6,12 +6,17 @@ import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 
 export type PlanTier = 'free' | 'pro';
 export type SubscriptionStatus = 'free' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
-export type AiUsageKind = 'parse' | 'rewrite' | 'suggestion';
+export type AiUsageKind = 'parse' | 'rewrite' | 'suggestion' | 'mint_chat' | 'export';
 
 export interface TierLimits {
   maxPublishedPortfolios: number;
+  /** Pro/trial: parses allowed per rolling 24h */
   maxAiParsesPerDay: number;
-  maxAiSuggestionsPerMonth: number;
+  /** Free: parses allowed per rolling 30 days */
+  maxAiParsesPerMonth: number;
+  maxAiRewritesPerMonth: number;
+  maxMintMessagesPerDay: number;
+  maxResumeExportsPerMonth: number;
   themes: Array<'classic' | 'neubrutalism' | 'editorial' | 'minimal' | 'terminal'>;
   includeFooter: boolean;
   blog: boolean;
@@ -23,8 +28,11 @@ export interface TierLimits {
 export const TIER_LIMITS: Record<PlanTier, TierLimits> = {
   free: {
     maxPublishedPortfolios: 1,
-    maxAiParsesPerDay: 3,
-    maxAiSuggestionsPerMonth: 10,
+    maxAiParsesPerDay: 0,
+    maxAiParsesPerMonth: 3,
+    maxAiRewritesPerMonth: 3,
+    maxMintMessagesPerDay: 10,
+    maxResumeExportsPerMonth: 1,
     themes: ['classic', 'minimal', 'neubrutalism'],
     includeFooter: true,
     blog: false,
@@ -34,8 +42,11 @@ export const TIER_LIMITS: Record<PlanTier, TierLimits> = {
   },
   pro: {
     maxPublishedPortfolios: Number.POSITIVE_INFINITY,
-    maxAiParsesPerDay: 50,
-    maxAiSuggestionsPerMonth: 500,
+    maxAiParsesPerDay: 20,
+    maxAiParsesPerMonth: Number.POSITIVE_INFINITY,
+    maxAiRewritesPerMonth: 100,
+    maxMintMessagesPerDay: 50,
+    maxResumeExportsPerMonth: Number.POSITIVE_INFINITY,
     themes: ['classic', 'neubrutalism', 'editorial', 'minimal', 'terminal'],
     includeFooter: false,
     blog: true,
@@ -46,6 +57,8 @@ export const TIER_LIMITS: Record<PlanTier, TierLimits> = {
 };
 
 const PAST_DUE_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MONTH_MS = 30 * DAY_MS;
 
 export function tierFromSubscriptionStatus(
   status: SubscriptionStatus | null | undefined,
@@ -118,10 +131,71 @@ export async function canUseAiFeature(userId: string, kind: AiUsageKind): Promis
   const now = Date.now();
 
   if (kind === 'parse') {
-    const startOfDay = new Date(now - 24 * 60 * 60 * 1000);
-    return (await getAiUsageCountSince(userId, 'parse', startOfDay)) < limits.maxAiParsesPerDay;
+    if (tier === 'free') {
+      const since = new Date(now - MONTH_MS);
+      return (await getAiUsageCountSince(userId, 'parse', since)) < limits.maxAiParsesPerMonth;
+    }
+    const since = new Date(now - DAY_MS);
+    return (await getAiUsageCountSince(userId, 'parse', since)) < limits.maxAiParsesPerDay;
   }
 
-  const startOfMonth = new Date(now - 30 * 24 * 60 * 60 * 1000);
-  return (await getAiUsageCountSince(userId, kind, startOfMonth)) < limits.maxAiSuggestionsPerMonth;
+  if (kind === 'rewrite' || kind === 'export') {
+    const since = new Date(now - MONTH_MS);
+    const limit = kind === 'rewrite' ? limits.maxAiRewritesPerMonth : limits.maxResumeExportsPerMonth;
+    return (await getAiUsageCountSince(userId, kind, since)) < limit;
+  }
+
+  if (kind === 'mint_chat' || kind === 'suggestion') {
+    const since = new Date(now - DAY_MS);
+    const used = await getAiUsageCountSince(userId, 'mint_chat', since);
+    return used < limits.maxMintMessagesPerDay;
+  }
+
+  return false;
+}
+
+export interface AiUsageRemaining {
+  parsesRemaining: number;
+  rewritesRemaining: number;
+  mintMessagesRemaining: number;
+  exportsRemaining: number;
+}
+
+export async function getAiUsageRemaining(userId: string, tier: PlanTier): Promise<AiUsageRemaining> {
+  if (isPaymentGatingBypassed()) {
+    return {
+      parsesRemaining: Number.POSITIVE_INFINITY,
+      rewritesRemaining: Number.POSITIVE_INFINITY,
+      mintMessagesRemaining: Number.POSITIVE_INFINITY,
+      exportsRemaining: Number.POSITIVE_INFINITY,
+    };
+  }
+
+  const limits = getTierLimits(tier);
+  const now = Date.now();
+
+  if (tier === 'free') {
+    const parseUsed = await getAiUsageCountSince(userId, 'parse', new Date(now - MONTH_MS));
+    const rewriteUsed = await getAiUsageCountSince(userId, 'rewrite', new Date(now - MONTH_MS));
+    const exportUsed = await getAiUsageCountSince(userId, 'export', new Date(now - MONTH_MS));
+    const mintUsed = await getAiUsageCountSince(userId, 'mint_chat', new Date(now - DAY_MS));
+
+    return {
+      parsesRemaining: Math.max(0, limits.maxAiParsesPerMonth - parseUsed),
+      rewritesRemaining: Math.max(0, limits.maxAiRewritesPerMonth - rewriteUsed),
+      mintMessagesRemaining: Math.max(0, limits.maxMintMessagesPerDay - mintUsed),
+      exportsRemaining: Math.max(0, limits.maxResumeExportsPerMonth - exportUsed),
+    };
+  }
+
+  const parseUsed = await getAiUsageCountSince(userId, 'parse', new Date(now - DAY_MS));
+  const rewriteUsed = await getAiUsageCountSince(userId, 'rewrite', new Date(now - MONTH_MS));
+  const mintUsed = await getAiUsageCountSince(userId, 'mint_chat', new Date(now - DAY_MS));
+
+  return {
+    parsesRemaining: Math.max(0, limits.maxAiParsesPerDay - parseUsed),
+    rewritesRemaining: Math.max(0, limits.maxAiRewritesPerMonth - rewriteUsed),
+    mintMessagesRemaining: Math.max(0, limits.maxMintMessagesPerDay - mintUsed),
+    exportsRemaining: Number.POSITIVE_INFINITY,
+  };
 }

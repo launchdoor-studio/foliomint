@@ -9,6 +9,8 @@ import {
   users,
   verificationTokens,
 } from '@/lib/db/schema';
+import { grantSignupTrialIfEligible } from '@/lib/signup-trial';
+import { DEV_USER, isDevAuthBypassed } from '@/lib/dev-mode';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -18,6 +20,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+  events: {
+    async createUser({ user }) {
+      if (user.id) {
+        await grantSignupTrialIfEligible(user.id);
+      }
+    },
+  },
 });
 
 export interface AppUser {
@@ -27,11 +36,11 @@ export interface AppUser {
 }
 
 export async function getCurrentUser(): Promise<AppUser | null> {
-  if (process.env.NEXTAUTH_DEV_BYPASS === 'true') {
+  if (isDevAuthBypassed()) {
     return {
-      id: 'dev-user',
-      email: 'dev@example.com',
-      name: 'Dev User',
+      id: DEV_USER.id,
+      email: DEV_USER.email,
+      name: DEV_USER.name,
     };
   }
 

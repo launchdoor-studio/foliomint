@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isDevAuthBypassed } from '@/lib/dev-mode';
 import { and, count, eq } from 'drizzle-orm';
 
 import { getTierLimits, getUserTier } from '@/lib/access';
@@ -17,7 +18,7 @@ interface RouteContext {
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
@@ -55,7 +56,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
 
 export async function PATCH(req: Request, { params }: RouteContext) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 
@@ -229,7 +230,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
 export async function DELETE(_req: Request, { params }: RouteContext) {
   const appUser = await getCurrentUser();
-  if (!appUser && process.env.NEXTAUTH_DEV_BYPASS !== 'true') {
+  if (!appUser && !isDevAuthBypassed()) {
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   }
 

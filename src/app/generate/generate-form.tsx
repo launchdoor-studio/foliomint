@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/domain/navbar';
 import { Footer } from '@/components/domain/footer';
+import { useMintOptional } from '@/components/domain/mint/mint-provider';
 import { cn } from '@/lib/utils';
 
 const ACCEPTED_TYPES = [
@@ -29,12 +30,11 @@ const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 
 export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
   const router = useRouter();
+  const mint = useMintOptional();
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [consent, setConsent] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
-  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,14 +49,9 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (!isAuthed) return;
-    void fetch('/api/me', { credentials: 'include' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { aiConfigured?: boolean } | null) => {
-        setAiConfigured(Boolean(data?.aiConfigured));
-      })
-      .catch(() => setAiConfigured(false));
-  }, [isAuthed]);
+    if (!isAuthed || !mint) return;
+    mint.setNudge("Hi! I'm Mint — upload your resume and I'll help you build your portfolio.");
+  }, [isAuthed, mint]);
 
   const handleFileSelect = useCallback(
     (f: File) => {
@@ -83,22 +78,13 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
 
   const handleSubmit = async () => {
     if (!file) return;
-    if (consent && aiConfigured === false) {
-      setError('ai_key_required');
-      return;
-    }
     setIsUploading(true);
     setError(null);
-    setStatusMessage(
-      consent
-        ? 'Parsing with AI… this often takes 15-30 seconds. Please keep this tab open.'
-        : 'Extracting text and building your portfolio…',
-    );
+    setStatusMessage('Mint is parsing your resume… this often takes 15–30 seconds. Please keep this tab open.');
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('consent', String(consent));
 
       const res = await fetch('/api/parse', {
         method: 'POST',
@@ -107,10 +93,13 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
       });
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        const data = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
         const message = data.error || 'Upload failed';
         if (res.status === 401 || message.toLowerCase().includes('authentication')) {
           throw new Error('session_expired');
+        }
+        if (data.code === 'AI_PARSE_LIMIT_REACHED') {
+          throw new Error('parse_limit');
         }
         throw new Error(message);
       }
@@ -125,11 +114,13 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
       }
 
       setStatusMessage('Opening editor…');
-      router.replace(`/editor/${portfolioId}`);
+      router.replace(`/editor/${portfolioId}?from=parse`);
       return;
     } catch (err) {
       if (err instanceof Error && err.message === 'session_expired') {
         setError('session_expired');
+      } else if (err instanceof Error && err.message === 'parse_limit') {
+        setError('parse_limit');
       } else {
         setError(err instanceof Error ? err.message : 'Something went wrong');
       }
@@ -177,8 +168,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
   };
 
   const isAuthError = error === 'session_expired';
-  const isAiKeyError = error === 'ai_key_required';
-  const aiConsentBlocked = consent && aiConfigured === false;
+  const isParseLimitError = error === 'parse_limit';
 
   if (!isAuthed) {
     const previewSteps = [
@@ -209,7 +199,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                 Create your portfolio
               </h1>
               <p className="mt-3 text-base text-muted-foreground sm:text-lg">
-                Sign in, then upload your resume. We&apos;ll help you turn it into a site you can edit and publish.
+                Sign in, then upload your resume. Mint will help turn it into a site you can edit and publish.
               </p>
               <Button asChild size="lg" className="mt-8 w-full max-w-sm">
                 <Link href="/sign-in?callbackUrl=%2Fgenerate">Sign in to upload</Link>
@@ -234,13 +224,6 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                   </div>
                 ))}
               </div>
-              <p className="mt-8 text-center text-xs text-muted-foreground">
-                Blog, custom domain, and Pro extras live in{' '}
-                <span className="text-foreground/90">portfolio management</span> after you publish.{' '}
-                <Link href="/pricing" className="text-primary underline underline-offset-4 hover:no-underline">
-                  See plans
-                </Link>
-              </p>
             </div>
           </div>
         </main>
@@ -260,8 +243,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
               Create your portfolio
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Upload your resume and we&apos;ll extract your information. Use AI for smarter
-              mapping, or basic extraction — your choice.
+              Upload your resume and Mint will map it into an editable portfolio.
             </p>
           </div>
 
@@ -314,41 +296,17 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                 )}
               </div>
 
-              <label className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-accent/50">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => {
-                    setConsent(e.target.checked);
-                    if (e.target.checked && error === 'ai_key_required') {
-                      setError(null);
-                    }
-                  }}
-                  className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
-                />
-                <div>
-                  <p className="text-sm font-medium">Send resume to Groq AI for better mapping</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Your resume text will be sent to Groq&apos;s API for semantic extraction. No
-                    content is stored by Groq. Uncheck to use basic text extraction instead.
-                  </p>
-                  {aiConsentBlocked && (
-                    <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
-                      Add your Groq API key in{' '}
-                      <Link href="/dashboard/settings" className="font-medium underline">
-                        Settings
-                      </Link>{' '}
-                      to use AI parsing, or uncheck this box for basic extraction.
-                    </p>
-                  )}
-                </div>
-              </label>
+              <p className="rounded-lg border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                Mint reads your resume to extract experience, projects, and skills into the editor.
+                FolioMint stores your portfolio content; resume text is processed securely for parsing
+                only.
+              </p>
 
               {error && (
                 <div
                   className={cn(
                     'flex items-center gap-2 rounded-lg px-4 py-3 text-sm',
-                    isAuthError || isAiKeyError
+                    isAuthError || isParseLimitError
                       ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                       : 'bg-destructive/10 text-destructive',
                   )}
@@ -362,13 +320,10 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                       </Link>{' '}
                       to continue.
                     </span>
-                  ) : isAiKeyError ? (
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      AI parsing needs a Groq key. Add one in{' '}
-                      <Link href="/dashboard/settings" className="font-medium underline">
-                        Settings
-                      </Link>{' '}
-                      or uncheck AI parsing above.
+                  ) : isParseLimitError ? (
+                    <span>
+                      You&apos;ve reached your Mint parsing limit. Try again later or ask Mint for help
+                      starting from scratch.
                     </span>
                   ) : (
                     error
@@ -385,7 +340,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
 
               <Button
                 onClick={handleSubmit}
-                disabled={!file || isUploading || isCreatingBlank || aiConsentBlocked}
+                disabled={!file || isUploading || isCreatingBlank}
                 size="lg"
                 className="w-full"
               >
@@ -397,7 +352,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    {consent ? 'Parse with AI & Generate Portfolio' : 'Generate Portfolio'}
+                    Parse with Mint & Generate Portfolio
                   </>
                 )}
               </Button>

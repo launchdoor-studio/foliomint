@@ -149,7 +149,7 @@ function normalizeProjectFields(data: Record<string, unknown>): Record<string, u
   return data;
 }
 
-/** Validate a Groq API key with a lightweight models list call. */
+/** Validate platform Groq connectivity with a lightweight models list call. */
 export async function validateGroqApiKey(apiKey: string): Promise<boolean> {
   const groq = new Groq({ apiKey: apiKey.trim() });
   try {
@@ -183,7 +183,7 @@ export async function extractResumeFields(rawText: string, apiKey: string): Prom
     const json = completion.choices[0]?.message?.content;
 
     if (!json) {
-      throw new ParseError('No response received from Groq');
+      throw new ParseError('Mint did not receive a response. Please try again.');
     }
 
     const parsed = JSON.parse(json) as Record<string, unknown>;
@@ -195,18 +195,18 @@ export async function extractResumeFields(rawText: string, apiKey: string): Prom
     if (error instanceof Groq.APIError) {
       if (error.status === 401 || error.status === 403) {
         throw new ParseError(
-          'Your Groq API key was rejected. Check the key in Settings and try again.',
+          'Mint parsing is temporarily unavailable. Please try again in a few minutes.',
         );
       }
       if (error.status === 429) {
         throw new ParseError(
-          'Your Groq account rate limit was reached. Your resume text is available for manual editing.',
+          'Mint is rate-limited right now. Please wait a moment and try again.',
         );
       }
     }
 
     throw new ParseError(
-      `Failed to parse resume with AI: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Mint could not parse your resume: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 }
