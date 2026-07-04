@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { findCuratedMintAnswer } from '@/lib/mint/help-knowledge';
+import { buildMintSystemPrompt } from '@/lib/mint/help-knowledge';
 import { buildResumeHealthMintAnswer } from '@/lib/mint/resume-health-guidance';
 
 describe('resume health mint guidance', () => {
@@ -34,11 +34,12 @@ describe('resume health mint guidance', () => {
     expect(answer).not.toContain('not a chat message');
   });
 
-  it('answers resume health questions with context', () => {
-    const answer = findCuratedMintAnswer('what am I supposed to do here?', {
+  it('includes resume health in the Mint system prompt', () => {
+    const prompt = buildMintSystemPrompt({
       pathname: '/editor/abc',
       resumeHealth: snapshot,
     });
-    expect(answer).toContain('Quantified impact');
+    expect(prompt).toContain('Quantified impact');
+    expect(prompt).toContain('63/100');
   });
 });

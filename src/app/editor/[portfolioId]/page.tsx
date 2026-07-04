@@ -24,6 +24,7 @@ import {
 import { editorMonoControlClass } from '@/components/domain/editor-form-ui';
 import { Navbar } from '@/components/domain/navbar';
 import { useMintOptional } from '@/components/domain/mint/mint-provider';
+import { ResumeReimportButton } from '@/components/domain/resume-reimport-button';
 import {
   ResumeHealthDock,
   ResumeHealthToolbarToggle,
@@ -134,7 +135,7 @@ export default function EditorPage() {
   }, [params.portfolioId, router, searchParams]);
 
   useEffect(() => {
-    if (!mint || !state) return;
+    if (!mint || !state?.content) return;
     const step = EDITOR_WIZARD_STEPS[wizardStep];
     const health = scoreResumeHealth(state.content);
     mint.setPageContext({
@@ -206,11 +207,36 @@ export default function EditorPage() {
     );
   }
 
+  if (!state.content) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Navbar />
+        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          Failed to load portfolio content.
+        </div>
+      </div>
+    );
+  }
+
   const content = state.content;
   const updateContent = (updater: (current: PortfolioContent) => PortfolioContent) => {
     setState((prev) =>
       prev && prev.content ? { ...prev, content: updater(prev.content) } : prev,
     );
+  };
+
+  const handleReimport = (nextContent: PortfolioContent) => {
+    setState((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, content: nextContent };
+      saveBaselineRef.current = serializeEditorPageState(next);
+      return next;
+    });
+    setWizardStep(0);
+    setHealthPanelOpen(true);
+    toast.success('Resume re-imported', {
+      description: 'Mint refreshed your portfolio content from the file.',
+    });
   };
 
   const previewCardClass = cn(
@@ -352,6 +378,7 @@ export default function EditorPage() {
                   </Link>
                 </Button>
               )}
+              <ResumeReimportButton portfolioId={state.id} onImported={handleReimport} />
               <Button asChild variant="outline" size="sm">
                 <a
                   href={`/api/portfolios/${state.id}/export/resume`}

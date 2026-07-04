@@ -1,5 +1,6 @@
 import type { ImproveRequest, ImproveResult } from '@/lib/groq-improve';
-import { findCuratedMintAnswer, type MintContext } from '@/lib/mint/help-knowledge';
+import type { MintContext } from '@/lib/mint/help-knowledge';
+import { getFoliomintKnowledgeBase } from '@/lib/mint/knowledge-base';
 import { createBlankPortfolioContent } from '@/lib/portfolio-content';
 import type { ResumeData } from '@/types';
 
@@ -130,8 +131,19 @@ export function mockImproveResumeSection(req: ImproveRequest): ImproveResult {
 }
 
 export function mockMintReply(message: string, context: MintContext): string {
-  const curated = findCuratedMintAnswer(message, context);
-  if (curated) return curated;
+  const knowledge = getFoliomintKnowledgeBase().toLowerCase();
+  const q = message.trim().toLowerCase();
 
-  return `I'm running in local dev mode without a Groq API key, so this is a stub reply.${DEV_NOTE} Try asking about publishing, handles, themes, or resume export — those have built-in answers.`;
+  if (/re-?import|parse.*again|parse my resume/.test(q) && knowledge.includes('re-import resume')) {
+    return 'Open the editor toolbar and click **Re-import resume**, upload your file, then **Parse with Mint**. That re-extracts content into this portfolio without creating a new one.';
+  }
+  if (/publish|go live|make live/.test(q)) {
+    return 'Set your **Public username** on the Profile step, then click **Publish** in the editor toolbar. Your site will be at `/u/your-handle`.';
+  }
+  if (/resume health|what should i fix|health score/.test(q) && context.resumeHealth) {
+    const open = context.resumeHealth.openItems.map((item) => item.label).join(', ');
+    return `Your resume health is **${context.resumeHealth.score}/100**. Focus on: ${open || 'keeping up the good work'}. Edit the matching wizard steps and save — or use **Ask Mint what to fix first** in the health panel.`;
+  }
+
+  return `I'm running in local dev mode without a Groq API key, so this is a stub reply.${DEV_NOTE} Ask about publishing, re-import resume, resume health, or pricing — answers come from our FolioMint knowledge base when Groq is configured.`;
 }

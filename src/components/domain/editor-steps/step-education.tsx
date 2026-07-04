@@ -184,7 +184,7 @@ export function EditorStepEducation(ctx: EditorStepContext) {
             ))}
           </div>
         ) : (
-          <p className="font-mono text-sm text-muted-foreground">No schools yet. Add one or re-parse your resume.</p>
+          <p className="font-mono text-sm text-muted-foreground">No schools yet. Add one or use Re-import resume in the toolbar.</p>
         )}
       </EditorFormPanel>
     </div>

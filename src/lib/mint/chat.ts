@@ -19,8 +19,8 @@ export async function chatWithMint(
   const completion = await groq.chat.completions.create({
     messages: [{ role: 'system', content: system }, ...messages],
     model: 'llama-3.3-70b-versatile',
-    temperature: 0.4,
-    max_tokens: 1024,
+    temperature: 0.35,
+    max_tokens: 1536,
   });
 
   const content = completion.choices[0]?.message?.content?.trim();

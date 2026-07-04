@@ -1,11 +1,40 @@
 import PDFDocument from 'pdfkit';
 
+import {
+  buildResumeContactLinks,
+  type ResumeContactLink,
+} from '@/lib/export/resume-contact-links';
 import type { ResumeData } from '@/types';
 
 function line(doc: InstanceType<typeof PDFDocument>, text: string, opts?: { bold?: boolean; size?: number }) {
   if (opts?.bold) doc.font('Helvetica-Bold');
   else doc.font('Helvetica');
-  doc.fontSize(opts?.size ?? 10).text(text, { continued: false });
+  doc.fontSize(opts?.size ?? 10).fillColor('#000000').text(text, { continued: false });
+}
+
+function writeContactLine(doc: InstanceType<typeof PDFDocument>, items: ResumeContactLink[], size = 9) {
+  if (items.length === 0) return;
+
+  doc.font('Helvetica').fontSize(size).fillColor('#000000');
+
+  items.forEach((item, index) => {
+    if (index > 0) {
+      doc.text(' | ', { continued: true, underline: false, link: null });
+    }
+
+    const isLast = index === items.length - 1;
+    if (item.href) {
+      doc.text(item.label, {
+        link: item.href,
+        underline: true,
+        continued: !isLast,
+      });
+    } else {
+      doc.text(item.label, { continued: !isLast, underline: false, link: null });
+    }
+  });
+
+  doc.text('', { continued: false });
 }
 
 export async function renderResumePdf(content: ResumeData): Promise<Buffer> {
@@ -19,16 +48,9 @@ export async function renderResumePdf(content: ResumeData): Promise<Buffer> {
     line(doc, content.name || 'Resume', { bold: true, size: 18 });
     doc.moveDown(0.3);
 
-    const contactParts = [
-      content.email,
-      content.phone,
-      content.location,
-      content.website,
-      content.linkedin,
-      content.github,
-    ].filter(Boolean);
-    if (contactParts.length) {
-      line(doc, contactParts.join(' · '), { size: 9 });
+    const contactLinks = buildResumeContactLinks(content);
+    if (contactLinks.length) {
+      writeContactLine(doc, contactLinks);
       doc.moveDown(0.5);
     }
 

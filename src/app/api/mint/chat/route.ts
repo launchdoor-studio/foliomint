@@ -10,7 +10,7 @@ import { isDevAuthBypassed, shouldUseDevMockAi } from '@/lib/dev-mode';
 import { ensureDevUser } from '@/lib/dev-user';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 import { chatWithMint } from '@/lib/mint/chat';
-import { findCuratedMintAnswer, type MintContext } from '@/lib/mint/help-knowledge';
+import type { MintContext } from '@/lib/mint/help-knowledge';
 import { expireTrialIfNeeded, getTrialDaysLeft } from '@/lib/signup-trial';
 
 const bodySchema = z.object({
@@ -97,16 +97,6 @@ export async function POST(request: Request) {
     isPublished: body.context?.isPublished,
     resumeHealth: body.context?.resumeHealth,
   };
-
-  const curated = findCuratedMintAnswer(body.message, mintContext);
-  if (curated) {
-    await recordAiUsage({
-      userId,
-      kind: 'mint_chat',
-      model: 'curated',
-    });
-    return NextResponse.json({ reply: curated, source: 'curated' });
-  }
 
   const apiKey = resolvePlatformGroqApiKey();
   const useMockAi = shouldUseDevMockAi();
