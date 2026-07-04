@@ -1,4 +1,5 @@
 import { ParseError } from '@/lib/errors';
+import { resolveGithubHref, resolveLinkedInHref } from '@/lib/export/resume-contact-links';
 import { normalizeProjectLinks } from '@/lib/project-links';
 import { resumeDataSchema, type ResumeData } from '@/types';
 
@@ -296,6 +297,114 @@ function normalizeUrl(value: unknown): string | undefined {
   return url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
 }
 
+function normalizeGithubField(value: unknown): string | undefined {
+  const text = cleanText(value);
+  if (!text) return undefined;
+  if (/github\.com/i.test(text)) return resolveGithubHref(text);
+  const handle = text.replace(/^@/, '').trim();
+  if (/^[a-z0-9](?:[a-z0-9-]{0,37})$/i.test(handle)) return resolveGithubHref(handle);
+  return undefined;
+}
+
+function normalizeLinkedInField(value: unknown): string | undefined {
+  const text = cleanText(value);
+  if (!text) return undefined;
+  if (/linkedin\.com/i.test(text)) return resolveLinkedInHref(text);
+  const slug = text.replace(/^@/, '').replace(/^in\//i, '').trim();
+  if (/^[a-z0-9-]{3,100}$/i.test(slug)) return resolveLinkedInHref(slug);
+  return undefined;
+}
+
+const LOCATION_TOKEN =
+  /^(?:remote|india|usa|united states|canada|uk|united kingdom|london|berlin|delhi|mumbai|bangalore|bengaluru|hyderabad|pune|chennai|san francisco|new york|california|texas)(?:,\s*[\w\s.-]+)?$/i;
+
+function isLocationToken(token: string): boolean {
+  return LOCATION_TOKEN.test(token.trim());
+}
+
+function isWebsiteDomainToken(token: string): boolean {
+  const t = token.trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+  if (/github\.com|linkedin\.com|mailto:/i.test(t)) return false;
+  return /^[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s),;]*)?$/i.test(t);
+}
+
+function isBareSocialHandle(token: string): boolean {
+  const t = token.trim().replace(/^@/, '');
+  if (!t || t.length > 39) return false;
+  if (/[.@/\\|\s]/.test(t)) return false;
+  return /^[a-z0-9_-]+$/i.test(t);
+}
+
+function splitContactTokens(line: string): string[] {
+  if (/\|/.test(line) || /[•·]/.test(line)) {
+    return line.split(/\s*[|•·]\s*/).map((part) => part.trim()).filter(Boolean);
+  }
+  if (/\t/.test(line)) {
+    return line.split(/\t+/).map((part) => part.trim()).filter(Boolean);
+  }
+  return [line.trim()];
+}
+
+function inferSocialFromLabeledText(rawText: string): { github?: string; linkedin?: string } {
+  const github =
+    rawText.match(/\bgithub\s*:?\s*@?([a-z0-9](?:[a-z0-9-]{0,37}))\b/i)?.[1] ??
+    rawText.match(/\bgithub\s*:?\s*@?(?:https?:\/\/)?(?:www\.)?github\.com\/([a-z0-9_-]+)\b/i)?.[1];
+  const linkedin =
+    rawText.match(/\blinkedin\s*:?\s*(?:in\/)?@?([a-z0-9-]{3,100})\b/i)?.[1] ??
+    rawText.match(
+      /\blinkedin\s*:?\s*@?(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-z0-9_-]+)\b/i,
+    )?.[1];
+
+  return {
+    github: github ? resolveGithubHref(github) : undefined,
+    linkedin: linkedin ? resolveLinkedInHref(linkedin) : undefined,
+  };
+}
+
+/** Icon-style contact rows often export as bare handles without github.com / linkedin.com. */
+function inferSocialFromContactLines(lines: string[]): { github?: string; linkedin?: string } {
+  const contactLines = lines.slice(0, 18).filter((line) => {
+    if (isHeading(line)) return false;
+    return line.includes('@') || /\|/.test(line) || /[•·]/.test(line);
+  });
+
+  const bareHandles: string[] = [];
+
+  for (const line of contactLines) {
+    for (const token of splitContactTokens(line)) {
+      if (
+        validEmail(token) ||
+        isPhoneToken(token) ||
+        isLocationToken(token) ||
+        isWebsiteDomainToken(token) ||
+        /github\.com/i.test(token) ||
+        /linkedin\.com/i.test(token)
+      ) {
+        continue;
+      }
+      if (isBareSocialHandle(token)) {
+        bareHandles.push(token.replace(/^@/, ''));
+      }
+    }
+  }
+
+  const uniqueHandles = unique(bareHandles);
+  if (uniqueHandles.length === 0) return {};
+
+  if (uniqueHandles.length === 1) {
+    return { github: resolveGithubHref(uniqueHandles[0]) };
+  }
+
+  return {
+    github: resolveGithubHref(uniqueHandles[0]),
+    linkedin: resolveLinkedInHref(uniqueHandles[1]),
+  };
+}
+
+function isPhoneToken(token: string): boolean {
+  return /(?:\+?\d[\d\s().-]{7,}\d)/.test(token);
+}
+
 function isHeading(line: string): boolean {
   const normalized = line
     .toLowerCase()
@@ -391,9 +500,15 @@ function extractContacts(rawText: string, lines: string[]) {
   const urls = unique(
     rawText.match(/(?:https?:\/\/)?(?:www\.)?[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s),;]*)?/gi) ?? [],
   );
-  const linkedin = normalizeUrl(urls.find((url) => /linkedin\.com/i.test(url)));
-  const github = normalizeUrl(urls.find((url) => /github\.com/i.test(url)));
-  const website = normalizeUrl(urls.find((url) => !/linkedin\.com|github\.com|mailto:/i.test(url)));
+  const linkedinFromUrl = normalizeUrl(urls.find((url) => /linkedin\.com/i.test(url)));
+  const githubFromUrl = normalizeUrl(urls.find((url) => /github\.com/i.test(url)));
+  const labeled = inferSocialFromLabeledText(rawText);
+  const fromContactLine = inferSocialFromContactLines(lines);
+  const linkedin = linkedinFromUrl ?? labeled.linkedin ?? fromContactLine.linkedin;
+  const github = githubFromUrl ?? labeled.github ?? fromContactLine.github;
+  const website = normalizeUrl(
+    urls.find((url) => !/linkedin\.com|github\.com|mailto:/i.test(url)),
+  );
   const location =
     lines.find(
       (line) =>
@@ -710,8 +825,8 @@ export function normalizeResumeData(candidate: unknown, rawText: string): Resume
     phone: cleanText(record.phone) ?? contacts.phone,
     location: cleanText(record.location) ?? contacts.location,
     website: normalizeUrl(record.website) ?? contacts.website,
-    linkedin: normalizeUrl(record.linkedin) ?? contacts.linkedin,
-    github: normalizeUrl(record.github) ?? contacts.github,
+    linkedin: normalizeLinkedInField(record.linkedin) ?? contacts.linkedin,
+    github: normalizeGithubField(record.github) ?? contacts.github,
     bio,
     skills,
     experience: experience.length ? experience : fallbackExperience(sections),

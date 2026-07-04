@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isDevAuthBypassed } from '@/lib/dev-mode';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -92,7 +92,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         updatedAt: portfolios.updatedAt,
       })
       .from(portfolios)
-      .where(eq(portfolios.userId, userId)),
+      .where(eq(portfolios.userId, userId))
+      .orderBy(desc(portfolios.updatedAt)),
     db
       .select({
         totalViews: sql<number>`count(${viewLogs.id})`,

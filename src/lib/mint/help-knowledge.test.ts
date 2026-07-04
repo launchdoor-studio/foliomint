@@ -32,6 +32,17 @@ describe('mint knowledge base', () => {
           },
         ],
         missingFields: [],
+        openGaps: [],
+        resolvedGaps: [],
+        profileLinks: {
+          email: true,
+          phone: false,
+          website: false,
+          github: true,
+          linkedin: true,
+          profileImage: false,
+        },
+        projects: { total: 1, withLinks: 0 },
       },
     });
 

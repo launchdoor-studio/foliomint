@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { FileUp, Loader2, X } from 'lucide-react';
 
+import { FloatingAssistantPanel } from '@/components/domain/floating-assistant-panel';
+import { MintAvatar } from '@/components/domain/mint/mint-avatar';
 import { Button } from '@/components/ui/button';
 import type { PortfolioContent } from '@/types';
 
@@ -101,73 +103,75 @@ export function ResumeReimportButton({
         <span className="sm:hidden">Import</span>
       </Button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/30"
-            aria-label="Close re-import dialog"
-            onClick={close}
-          />
-          <div className="relative w-full max-w-md rounded-2xl border bg-background p-5 shadow-2xl">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold">Re-import from resume</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Upload PDF, DOCX, or TXT. Mint will extract experience, projects, and skills into
-                  this portfolio again. Your handle, theme, and publish settings stay the same, but
-                  editor content is replaced.
-                </p>
-              </div>
-              <Button type="button" variant="ghost" size="icon" onClick={close} aria-label="Close">
-                <X className="h-4 w-4" />
-              </Button>
+      <FloatingAssistantPanel
+        id="resume-reimport-panel"
+        open={open}
+        onClose={close}
+        backdropLabel="Close re-import panel"
+        heightClass="h-auto max-h-[min(420px,calc(100vh-7rem))]"
+        zIndexClass="z-[52]"
+        header={
+          <>
+            <MintAvatar pose="hello" size={36} />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold leading-tight">Re-import from resume</p>
+              <p className="text-xs text-muted-foreground">Replace editor content with a fresh parse</p>
             </div>
-
-            <div className="mt-4">
-              <input
-                ref={inputRef}
-                type="file"
-                accept=".pdf,.docx,.txt"
-                className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
-                onChange={(e) => {
-                  const next = e.target.files?.[0] ?? null;
-                  if (!next) {
-                    setFile(null);
-                    return;
-                  }
-                  const validationError = validateFile(next);
-                  if (validationError) {
-                    setError(validationError);
-                    setFile(null);
-                    return;
-                  }
-                  setError(null);
-                  setFile(next);
-                }}
-              />
-            </div>
-
-            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-
-            <div className="mt-5 flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={close} disabled={loading}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={() => void handleImport()} disabled={!file || loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Parsing…
-                  </>
-                ) : (
-                  'Parse with Mint'
-                )}
-              </Button>
-            </div>
+            <Button type="button" variant="ghost" size="icon" onClick={close} aria-label="Close">
+              <X className="h-4 w-4" />
+            </Button>
+          </>
+        }
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={close} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={() => void handleImport()} disabled={!file || loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Parsing…
+                </>
+              ) : (
+                'Parse with Mint'
+              )}
+            </Button>
           </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          Upload PDF, DOCX, or TXT. Mint will extract experience, projects, and skills into this
+          portfolio again. Your handle, theme, and publish settings stay the same, but editor content
+          is replaced.
+        </p>
+
+        <div className="mt-4">
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.docx,.txt"
+            className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-2 file:border-border file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground"
+            onChange={(e) => {
+              const next = e.target.files?.[0] ?? null;
+              if (!next) {
+                setFile(null);
+                return;
+              }
+              const validationError = validateFile(next);
+              if (validationError) {
+                setError(validationError);
+                setFile(null);
+                return;
+              }
+              setError(null);
+              setFile(next);
+            }}
+          />
         </div>
-      )}
+
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      </FloatingAssistantPanel>
     </>
   );
 }

@@ -1,5 +1,7 @@
 import type { ResumeData } from '@/types';
 
+import { reconcilePortfolioGaps } from '@/lib/mint/portfolio-gap-reconciliation';
+
 export interface ResumeHealthResult {
   score: number;
   label: 'Needs work' | 'Getting there' | 'Strong';
@@ -20,7 +22,8 @@ export function scoreResumeHealth(content: ResumeData): ResumeHealthResult {
   const hasBio = Boolean(content.bio?.trim());
   const hasHeadline = Boolean(content.headline?.trim());
   const hasContact = Boolean(content.email || content.linkedin || content.github || content.website);
-  const missingFromAi = content.portfolioSuggestions?.missingFields?.length ?? 0;
+  const { openGaps } = reconcilePortfolioGaps(content);
+  const missingFromAi = openGaps.length;
 
   const checks = [
     {
@@ -71,7 +74,7 @@ export function scoreResumeHealth(content: ResumeData): ResumeHealthResult {
       passed: missingFromAi === 0,
       hint:
         missingFromAi > 0
-          ? `Mint flagged ${missingFromAi} gap(s) — review suggestions below.`
+          ? `Still open: ${openGaps.join('; ')}.`
           : undefined,
     },
   ];

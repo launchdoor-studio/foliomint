@@ -1,7 +1,6 @@
 import { getEditorWizardStep } from '@/lib/editor-wizard-steps';
 import { getFoliomintKnowledgeBase } from '@/lib/mint/knowledge-base';
 import {
-  buildResumeHealthMintAnswer,
   type MintResumeHealthSnapshot,
 } from '@/lib/mint/resume-health-guidance';
 
@@ -16,6 +15,15 @@ export interface MintContext {
   resumeHealth?: MintResumeHealthSnapshot;
 }
 
+const MINT_REASONING_RULES = `## Resume health & portfolio intelligence
+
+When the session includes a portfolio snapshot:
+- **Live editor state wins** over parse-time suggestions. If profile links show github/linkedin as "set", never tell the user to add them — explain any gap was a stale parse reminder if they ask.
+- Use **openGaps** and **open health items** only for recommendations. Items under resolvedGaps are already done — acknowledge that clearly.
+- If the user challenges a gap ("I already have GitHub"), answer using snapshot facts first: confirm what's set, what's still open, and what step to use.
+- Do not repeat a canned checklist verbatim. Reason about their specific score, open items, and project link counts.
+- Prefer one clear next action over a long generic list.`;
+
 function buildSessionContextBlock(context: MintContext): string {
   const step = getEditorWizardStep(context.editorStep);
   const lines = [
@@ -29,25 +37,38 @@ function buildSessionContextBlock(context: MintContext): string {
   ];
 
   if (context.resumeHealth) {
+    const h = context.resumeHealth;
     lines.push(
-      `- Resume health: ${context.resumeHealth.score}/100 (${context.resumeHealth.label})`,
+      '',
+      '## Portfolio snapshot (authoritative — trust over parse suggestions)',
+      `- Resume health: ${h.score}/100 (${h.label})`,
+      `- Profile links: email ${h.profileLinks.email ? 'set' : 'empty'}, github ${h.profileLinks.github ? 'set' : 'empty'}, linkedin ${h.profileLinks.linkedin ? 'set' : 'empty'}, website ${h.profileLinks.website ? 'set' : 'empty'}, photo ${h.profileLinks.profileImage ? 'set' : 'empty'}`,
+      `- Projects: ${h.projects.total} total, ${h.projects.withLinks} with external links`,
     );
-    if (context.resumeHealth.openItems.length > 0) {
-      lines.push('- Open health items:');
-      for (const item of context.resumeHealth.openItems) {
-        lines.push(`  - ${item.label} → edit **${item.editorStep}**${item.hint ? ` (${item.hint})` : ''}`);
+
+    if (h.openItems.length > 0) {
+      lines.push('- Open health checklist items:');
+      for (const item of h.openItems) {
+        lines.push(`  - ${item.label} → **${item.editorStep}**${item.hint ? ` (${item.hint})` : ''}`);
       }
-    }
-    if (context.resumeHealth.missingFields.length > 0) {
-      lines.push(`- Gaps to fill: ${context.resumeHealth.missingFields.join('; ')}`);
-    }
-    if (context.resumeHealth.suggestedTagline) {
-      lines.push(`- Suggested tagline: ${context.resumeHealth.suggestedTagline}`);
+    } else {
+      lines.push('- Open health checklist items: none');
     }
 
-    const healthPlan = buildResumeHealthMintAnswer(context.resumeHealth);
-    if (healthPlan) {
-      lines.push('', 'Suggested health plan for this user:', healthPlan);
+    if (h.openGaps.length > 0) {
+      lines.push(`- Open parse suggestions: ${h.openGaps.join('; ')}`);
+    } else {
+      lines.push('- Open parse suggestions: none');
+    }
+
+    if (h.resolvedGaps.length > 0) {
+      lines.push(
+        `- Already satisfied (stale parse reminders — do NOT ask user to redo): ${h.resolvedGaps.join('; ')}`,
+      );
+    }
+
+    if (h.suggestedTagline) {
+      lines.push(`- Optional tagline idea: ${h.suggestedTagline}`);
     }
   }
 
@@ -77,6 +98,8 @@ export function buildMintSystemPrompt(context: MintContext): string {
   return `You are Mint, the friendly in-app guide for FolioMint (a portfolio builder).
 
 ${MINT_SECURITY_RULES}
+
+${MINT_REASONING_RULES}
 
 ## How to answer
 

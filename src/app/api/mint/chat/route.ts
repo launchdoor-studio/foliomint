@@ -11,6 +11,7 @@ import { ensureDevUser } from '@/lib/dev-user';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
 import { chatWithMint } from '@/lib/mint/chat';
 import type { MintContext } from '@/lib/mint/help-knowledge';
+import type { MintResumeHealthSnapshot } from '@/lib/mint/resume-health-guidance';
 import { expireTrialIfNeeded, getTrialDaysLeft } from '@/lib/signup-trial';
 
 const bodySchema = z.object({
@@ -35,6 +36,24 @@ const bodySchema = z.object({
             }),
           ),
           missingFields: z.array(z.string()),
+          openGaps: z.array(z.string()).optional(),
+          resolvedGaps: z.array(z.string()).optional(),
+          profileLinks: z
+            .object({
+              email: z.boolean(),
+              phone: z.boolean(),
+              website: z.boolean(),
+              github: z.boolean(),
+              linkedin: z.boolean(),
+              profileImage: z.boolean(),
+            })
+            .optional(),
+          projects: z
+            .object({
+              total: z.number(),
+              withLinks: z.number(),
+            })
+            .optional(),
           suggestedTagline: z.string().optional(),
         })
         .optional(),
@@ -50,6 +69,32 @@ const bodySchema = z.object({
     .max(20)
     .optional(),
 });
+
+type ResumeHealthPayload = NonNullable<NonNullable<z.infer<typeof bodySchema>['context']>['resumeHealth']>;
+
+function normalizeResumeHealthSnapshot(
+  raw: ResumeHealthPayload | undefined,
+): MintResumeHealthSnapshot | undefined {
+  if (!raw) return undefined;
+  return {
+    score: raw.score,
+    label: raw.label,
+    openItems: raw.openItems,
+    missingFields: raw.missingFields,
+    openGaps: raw.openGaps ?? raw.missingFields,
+    resolvedGaps: raw.resolvedGaps ?? [],
+    profileLinks: raw.profileLinks ?? {
+      email: false,
+      phone: false,
+      website: false,
+      github: false,
+      linkedin: false,
+      profileImage: false,
+    },
+    projects: raw.projects ?? { total: 0, withLinks: 0 },
+    suggestedTagline: raw.suggestedTagline,
+  };
+}
 
 export async function POST(request: Request) {
   const appUser = await getCurrentUser();
@@ -95,7 +140,7 @@ export async function POST(request: Request) {
     trialDaysLeft,
     hasPortfolio: body.context?.hasPortfolio,
     isPublished: body.context?.isPublished,
-    resumeHealth: body.context?.resumeHealth,
+    resumeHealth: normalizeResumeHealthSnapshot(body.context?.resumeHealth),
   };
 
   const apiKey = resolvePlatformGroqApiKey();

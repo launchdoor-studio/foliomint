@@ -5,16 +5,18 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EditorField, EditorFormPanel, editorRepeatBodyClass } from '@/components/domain/editor-form-ui';
+import { reconcilePortfolioGaps } from '@/lib/mint/portfolio-gap-reconciliation';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
 
 export function EditorStepMore(ctx: EditorStepContext) {
   const { updateContent, monoInput, monoTextarea, editorRepeatItemClass } = ctx;
   const content = ctx.state.content;
   const suggestions = content?.portfolioSuggestions;
+  const gapStatus = content ? reconcilePortfolioGaps(content) : null;
   const hasSuggestions = Boolean(
     suggestions?.heroTagline ||
       suggestions?.bioVariants?.length ||
-      suggestions?.missingFields?.length ||
+      (gapStatus && (gapStatus.openGaps.length > 0 || gapStatus.resolvedGaps.length > 0)) ||
       suggestions?.recommendedSectionOrder?.length,
   );
 
@@ -31,14 +33,26 @@ export function EditorStepMore(ctx: EditorStepContext) {
                 <p className="mt-2 rounded-lg border bg-muted/30 p-3">{suggestions.heroTagline}</p>
               </div>
             )}
-            {suggestions?.missingFields && suggestions.missingFields.length > 0 && (
+            {gapStatus && gapStatus.openGaps.length > 0 && (
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   Add before publishing
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                  {suggestions.missingFields.map((item) => (
+                  {gapStatus.openGaps.map((item) => (
                     <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {gapStatus && gapStatus.resolvedGaps.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Already done
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground/80">
+                  {gapStatus.resolvedGaps.map((item) => (
+                    <li key={item} className="line-through">{item}</li>
                   ))}
                 </ul>
               </div>

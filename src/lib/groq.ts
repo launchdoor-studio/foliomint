@@ -47,6 +47,7 @@ Rules:
 - When the resume comes from LinkedIn or similar, the name is usually the prominent personal name at the top of the document. Use that as "name".
 - Do NOT set "name" to labels or entire sidebars such as "Contact", "Profile", or other section titles.
 - Contact fields ("email", "phone", "location", "website", "linkedin", "github") should come from explicit contact/profile info, not from project descriptions.
+- GITHUB / LINKEDIN: Many resumes show icon rows with bare handles only (e.g. "maskedsyntax" and "aftaabsiddiqui" without github.com or linkedin.com). When the contact row order is email | website | GitHub handle | LinkedIn handle | location, map bare handles to full URLs: github -> https://github.com/{handle}, linkedin -> https://www.linkedin.com/in/{slug}. Prefer labeled lines ("GitHub: user") when present.
 - Set "website" ONLY when the URL is clearly the person's own site/portfolio/homepage/blog.
 - Do NOT use a project/product/company URL as "website" unless the resume explicitly states it is the person's site.
 - If a URL belongs to a specific project, put it in that project's "links" array (not top-level "website").

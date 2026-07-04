@@ -1,15 +1,12 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
-import { AssistantDockShell } from '@/components/domain/assistant-dock-shell';
+import { FloatingAssistantPanel } from '@/components/domain/floating-assistant-panel';
 import { MintAvatar } from '@/components/domain/mint/mint-avatar';
 import { useMintOptional } from '@/components/domain/mint/mint-provider';
 import { Button } from '@/components/ui/button';
-import {
-  assistantDockEdgeTabClass,
-  assistantDockMarginClass,
-} from '@/lib/assistant-dock';
+import { reconcilePortfolioGaps } from '@/lib/mint/portfolio-gap-reconciliation';
 import type { ResumeHealthResult } from '@/lib/resume-health';
 import type { ResumeData } from '@/types';
 import { cn } from '@/lib/utils';
@@ -24,6 +21,7 @@ export function ResumeHealthPanelContent({
   className?: string;
 }) {
   const suggestions = content.portfolioSuggestions;
+  const gapStatus = reconcilePortfolioGaps(content);
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -44,7 +42,7 @@ export function ResumeHealthPanelContent({
       </ul>
 
       {suggestions?.heroTagline && (
-        <div className="rounded-lg border bg-muted/30 p-3">
+        <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 p-3 dark:border-white/10">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Suggested tagline
           </p>
@@ -52,14 +50,29 @@ export function ResumeHealthPanelContent({
         </div>
       )}
 
-      {suggestions?.missingFields && suggestions.missingFields.length > 0 && (
+      {gapStatus.openGaps.length > 0 && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Gaps to fill
           </p>
           <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground">
-            {suggestions.missingFields.map((item) => (
+            {gapStatus.openGaps.map((item) => (
               <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {gapStatus.resolvedGaps.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Already in your portfolio
+          </p>
+          <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground/80">
+            {gapStatus.resolvedGaps.map((item) => (
+              <li key={item} className="line-through decoration-muted-foreground/50">
+                {item}
+              </li>
             ))}
           </ul>
         </div>
@@ -99,7 +112,7 @@ export function ResumeHealthToolbarToggle({
       className={cn('h-8 shrink-0 gap-1.5 px-2.5', className)}
       onClick={onToggle}
       aria-expanded={open}
-      aria-controls="resume-health-dock"
+      aria-controls="resume-health-panel"
       title={open ? 'Hide Mint resume health panel' : 'Show Mint resume health panel'}
     >
       <MintAvatar pose="guide" size={18} />
@@ -111,15 +124,11 @@ export function ResumeHealthToolbarToggle({
   );
 }
 
-export { assistantDockMarginClass as resumeHealthDockMarginClass };
-
 export function ResumeHealthDock({
   open,
   onOpenChange,
   content,
   health,
-  chrome = 'editor',
-  edgeTabOffset = 'center',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -134,49 +143,18 @@ export function ResumeHealthDock({
 
   const askMintForHelp = () => {
     if (!mint) return;
+    close();
     mint.openMint();
     void mint.sendMessage('What should I fix first in my resume health checklist?');
   };
 
-  const edgeTabPosition =
-    edgeTabOffset === 'upper'
-      ? 'top-1/2 -translate-y-[calc(50%+2.75rem)]'
-      : 'top-1/2 -translate-y-1/2';
-
-  const showEdgeTab = !open;
-
   return (
-    <AssistantDockShell
-      id="resume-health-dock"
+    <FloatingAssistantPanel
+      id="resume-health-panel"
       open={open}
       onClose={close}
-      chrome={chrome}
-      mobileBackdropLabel="Minimize resume health panel"
-      edgeTab={
-        showEdgeTab ? (
-        <button
-          type="button"
-          onClick={() => onOpenChange(true)}
-          className={cn(
-            'fixed right-0 z-40 flex -translate-y-1/2 flex-col items-center gap-1 px-2 py-3',
-            edgeTabPosition,
-            assistantDockEdgeTabClass,
-          )}
-          aria-label={`Open resume health panel. Score ${health.score} out of 100.`}
-          aria-expanded={false}
-          aria-controls="resume-health-dock"
-        >
-          <MintAvatar pose="guide" size={24} />
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground [writing-mode:vertical-rl] rotate-180">
-            Health
-          </span>
-          <span className={cn('text-xs font-bold tabular-nums', scoreTone(health.score))}>
-            {health.score}
-          </span>
-          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-        ) : null
-      }
+      backdropLabel="Close resume health panel"
+      zIndexClass="z-[48]"
       header={
         <>
           <MintAvatar pose="guide" size={36} />
@@ -216,6 +194,6 @@ export function ResumeHealthDock({
         go, and ask Mint if you want help prioritizing or wording bullets.
       </p>
       <ResumeHealthPanelContent content={content} health={health} />
-    </AssistantDockShell>
+    </FloatingAssistantPanel>
   );
 }

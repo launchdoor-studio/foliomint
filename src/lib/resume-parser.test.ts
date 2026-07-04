@@ -88,6 +88,36 @@ describe('resume parser normalization', () => {
     });
   });
 
+  it('infers github and linkedin from icon-style bare handles in a contact row', () => {
+    const iconRowResume = `
+Aftaab Siddiqui
+aftaab@aftaab.dev | aftaab.dev | maskedsyntax | aftaabsiddiqui | India
+
+Summary
+Full-stack engineer.
+`;
+
+    const fallback = buildFallbackResumeData(iconRowResume);
+    expect(fallback.github).toBe('https://github.com/maskedsyntax');
+    expect(fallback.linkedin).toBe('https://www.linkedin.com/in/aftaabsiddiqui');
+    expect(fallback.website).toBe('https://aftaab.dev');
+    expect(fallback.email).toBe('aftaab@aftaab.dev');
+  });
+
+  it('normalizes bare github and linkedin handles from AI output', () => {
+    const normalized = normalizeResumeData(
+      {
+        name: 'Aftaab Siddiqui',
+        github: 'maskedsyntax',
+        linkedin: 'aftaabsiddiqui',
+      },
+      'Aftaab Siddiqui',
+    );
+
+    expect(normalized.github).toBe('https://github.com/maskedsyntax');
+    expect(normalized.linkedin).toBe('https://www.linkedin.com/in/aftaabsiddiqui');
+  });
+
   it('trims overcrowded categorized skills and blocks institution names', () => {
     const noisy = normalizeSkills(
       [

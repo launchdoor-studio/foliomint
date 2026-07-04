@@ -30,7 +30,6 @@ import {
   ResumeHealthToolbarToggle,
 } from '@/components/domain/resume-health-panel';
 import { useEditorToolbarHeight } from '@/hooks/use-editor-toolbar-height';
-import { assistantDockMarginClass } from '@/lib/assistant-dock';
 import { TrialBanner } from '@/components/domain/trial-banner';
 import { scoreResumeHealth } from '@/lib/resume-health';
 import { buildMintResumeHealthSnapshot } from '@/lib/mint/resume-health-guidance';
@@ -421,12 +420,7 @@ export default function EditorPage() {
           </div>
         )}
 
-        <div
-          className={cn(
-            'transition-[margin] duration-300 ease-out',
-            healthPanelOpen && assistantDockMarginClass,
-          )}
-        >
+        <div>
         {/* Published: slim banner under toolbar (discovery) + full checklist after wizard */}
         {state.isPublished ? (
           <Suspense fallback={editorWorkspace}>
