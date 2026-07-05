@@ -13,6 +13,7 @@ import {
   editorRepeatBodyClass,
 } from '@/components/domain/editor-form-ui';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
+import { bulletsFromTextareaValue } from '@/lib/bullet-textarea';
 
 export function EditorStepExperience(ctx: EditorStepContext) {
   const { updateContent, monoInput, monoTextarea, editorRepeatItemClass } = ctx;
@@ -46,7 +47,7 @@ export function EditorStepExperience(ctx: EditorStepContext) {
           <div className="space-y-8">
             {content.experience.map((exp, idx) => (
               <div key={`editor-exp-${idx}`} className={editorRepeatItemClass}>
-                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4 dark:border-white/10">
+                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4">
                   <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Role {idx + 1}
                   </span>
@@ -186,10 +187,7 @@ export function EditorStepExperience(ctx: EditorStepContext) {
                             i === idx
                               ? {
                                   ...it,
-                                  bullets: e.target.value
-                                    .split('\n')
-                                    .map((v) => v.trim())
-                                    .filter(Boolean),
+                                  bullets: bulletsFromTextareaValue(e.target.value),
                                 }
                               : it,
                           ),

@@ -46,7 +46,7 @@ export function EditorStepEducation(ctx: EditorStepContext) {
           <div className="space-y-8">
             {content.education.map((edu, idx) => (
               <div key={`editor-edu-${idx}`} className={editorRepeatItemClass}>
-                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4 dark:border-white/10">
+                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4">
                   <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     School {idx + 1}
                   </span>

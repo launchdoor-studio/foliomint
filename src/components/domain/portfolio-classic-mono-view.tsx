@@ -6,6 +6,7 @@ import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profi
 import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
+import { visibleBullets, hasVisibleBullets } from '@/lib/bullet-textarea';
 import type { SocialLink } from '@/lib/social-links';
 import { cn, normalizeOutboundHref } from '@/lib/utils';
 import type { PortfolioContent } from '@/types';
@@ -44,7 +45,7 @@ function splitBioParagraphs(bio?: string | null): string[] {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-6 border-b border-zinc-200 pb-2 text-lg font-bold tracking-tight text-zinc-900 dark:border-zinc-700 dark:text-zinc-100 sm:text-xl">
+    <h2 className="mb-6 border-b border-[var(--portfolio-border)] pb-2 text-lg font-bold tracking-tight text-zinc-900 dark:border-zinc-700 dark:text-zinc-100 sm:text-xl">
       {children}
     </h2>
   );
@@ -91,7 +92,7 @@ export function PortfolioClassicMonoView({
     : null;
 
   return (
-    <div className="min-h-full text-zinc-800 antialiased dark:text-zinc-200">
+    <div className="min-h-full antialiased text-[var(--portfolio-fg)]">
       <div
         className={cn(
           'mx-auto max-w-2xl px-5 pb-20 sm:px-8 lg:max-w-3xl',
@@ -100,7 +101,7 @@ export function PortfolioClassicMonoView({
       >
         <header
           className={cn(
-            'mb-10 flex border-b border-zinc-200 pb-6 dark:border-zinc-700',
+            'mb-10 flex border-b border-[var(--portfolio-border)] pb-6 dark:border-zinc-700',
             narrowLayout
               ? 'flex-col gap-4'
               : 'flex-row items-center justify-between gap-3 sm:gap-4',
@@ -108,7 +109,7 @@ export function PortfolioClassicMonoView({
         >
           <span
             className={cn(
-              'min-w-0 text-sm font-bold text-zinc-900 dark:text-zinc-100',
+              'min-w-0 text-sm font-bold text-[var(--portfolio-fg)]',
               narrowLayout ? 'break-words' : 'min-w-0 flex-1 truncate pr-2',
             )}
           >
@@ -118,13 +119,13 @@ export function PortfolioClassicMonoView({
             {mobileBlogItem ? (
               <Link
                 href={mobileBlogItem.href}
-                className="box-border inline-flex h-10 max-h-10 min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-none border border-zinc-300 bg-white px-3 text-[11px] font-semibold uppercase leading-none tracking-[0.08em] text-zinc-600 !shadow-none transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)] dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 sm:hidden"
+                className="box-border inline-flex h-10 max-h-10 min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-none border border-[var(--portfolio-border)] bg-white px-3 text-[11px] font-semibold uppercase leading-none tracking-[0.08em] text-zinc-600 !shadow-none transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)] dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 sm:hidden"
               >
                 {mobileBlogItem.label}
               </Link>
             ) : null}
 
-            <nav className="hidden max-w-full flex-wrap items-center justify-end gap-x-3 gap-y-2 text-zinc-500 sm:flex sm:gap-x-4 md:gap-x-5 lg:gap-x-4 xl:gap-x-5">
+            <nav className="hidden max-w-full flex-wrap items-center justify-end gap-x-3 gap-y-2 text-[var(--portfolio-fg-muted)] sm:flex sm:gap-x-4 md:gap-x-5 lg:gap-x-4 xl:gap-x-5">
               {navItems.map((item) =>
                 item.href.startsWith('/') ? (
                   <Link
@@ -152,7 +153,7 @@ export function PortfolioClassicMonoView({
 
         <section
           className={cn(
-            'mb-14 border-b border-zinc-200 pb-12 dark:border-zinc-700 sm:mb-16 sm:pb-14',
+            'mb-14 border-b border-[var(--portfolio-border)] pb-12 dark:border-zinc-700 sm:mb-16 sm:pb-14',
             narrowLayout
               ? 'flex flex-col gap-6'
               : 'flex flex-col gap-8 sm:flex-row-reverse sm:items-start sm:justify-between sm:gap-10 lg:gap-14',
@@ -165,14 +166,14 @@ export function PortfolioClassicMonoView({
                 src={content.profileImageUrl}
                 alt={displayName}
                 className={cn(
-                  'border border-zinc-300 object-cover dark:border-zinc-600',
+                  'border border-[var(--portfolio-border)] object-cover dark:border-zinc-600',
                   narrowLayout ? 'h-20 w-20' : 'h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32',
                 )}
               />
             ) : (
               <div
                 className={cn(
-                  'flex items-center justify-center border border-zinc-300 font-bold text-zinc-400 dark:border-zinc-600 dark:text-zinc-500',
+                  'flex items-center justify-center border border-[var(--portfolio-border)] font-bold text-zinc-400 dark:border-zinc-600 dark:text-[var(--portfolio-fg-muted)]',
                   narrowLayout ? 'h-20 w-20 text-xl' : 'h-24 w-24 text-2xl sm:h-28 sm:w-28 md:h-32 md:w-32',
                 )}
               >
@@ -182,23 +183,23 @@ export function PortfolioClassicMonoView({
           </div>
           <div className="min-w-0 flex-1 space-y-4">
             {skillsEyebrow ? (
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{skillsEyebrow}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--portfolio-fg-muted)]">{skillsEyebrow}</p>
             ) : null}
             <h1
               className={cn(
-                'break-words font-bold leading-tight tracking-tight text-zinc-950 dark:text-zinc-50',
+                'break-words font-bold leading-tight tracking-tight text-[var(--portfolio-fg)]',
                 narrowLayout ? 'text-2xl' : 'text-[clamp(1.75rem,3vw+0.5rem,3rem)]',
               )}
             >
               {displayName}
             </h1>
             {content.headline ? (
-              <p className="max-w-xl text-base font-semibold leading-relaxed text-zinc-700 dark:text-zinc-300 sm:text-lg">
+              <p className="max-w-xl text-base font-semibold leading-relaxed text-[var(--portfolio-fg-muted)] sm:text-lg">
                 {content.headline}
               </p>
             ) : null}
             {content.location ? (
-              <p className="flex items-center gap-2 text-sm text-zinc-500">
+              <p className="flex items-center gap-2 text-sm text-[var(--portfolio-fg-muted)]">
                 <MapPin className="h-4 w-4 shrink-0" />
                 {content.location}
               </p>
@@ -212,7 +213,7 @@ export function PortfolioClassicMonoView({
         {bioParagraphs.length > 0 && (
           <section id="about" className="mb-14 scroll-mt-24 sm:mb-16">
             <SectionTitle>About</SectionTitle>
-            <div className="max-w-prose space-y-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-[15px] sm:leading-[1.75]">
+            <div className="max-w-prose space-y-4 text-sm leading-relaxed text-[var(--portfolio-fg-muted)] sm:text-[15px] sm:leading-[1.75]">
               {bioParagraphs.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
@@ -236,25 +237,25 @@ export function PortfolioClassicMonoView({
                     >
                       <h3
                         className={cn(
-                          'font-bold text-zinc-900 dark:text-zinc-100',
+                          'font-bold text-[var(--portfolio-fg)]',
                           narrowLayout ? 'text-base' : 'text-base sm:text-lg',
                         )}
                       >
                         {exp.role}
                       </h3>
                       {exp.location ? (
-                        <span className="w-fit shrink-0 border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:border-zinc-600 dark:bg-zinc-900/60 dark:text-zinc-400">
+                        <span className="w-fit shrink-0 border border-[var(--portfolio-border)] bg-[var(--portfolio-surface)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:border-zinc-600  dark:text-zinc-400">
                           {exp.location}
                         </span>
                       ) : null}
                     </div>
-                    <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-500">{exp.company}</p>
-                    <p className="mt-2 text-xs font-medium tabular-nums text-zinc-500 dark:text-zinc-600">{dateStr}</p>
-                    {exp.bullets && exp.bullets.length > 0 ? (
-                      <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:mt-5">
-                        {exp.bullets.map((b, i) => (
+                    <p className="mt-1.5 text-sm text-[var(--portfolio-fg-muted)]">{exp.company}</p>
+                    <p className="mt-2 text-xs font-medium tabular-nums text-[var(--portfolio-fg-muted)]">{dateStr}</p>
+                    {hasVisibleBullets(exp.bullets) ? (
+                      <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-[var(--portfolio-fg-muted)] sm:mt-5">
+                        {visibleBullets(exp.bullets).map((b, i) => (
                           <li key={i} className="flex gap-3">
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-600" aria-hidden />
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
                             <span>{b}</span>
                           </li>
                         ))}
@@ -273,12 +274,12 @@ export function PortfolioClassicMonoView({
             <div className="space-y-8">
               {content.education.map((edu, idx) => (
                 <article key={`edu-${idx}`}>
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 sm:text-lg">{edu.institution}</h3>
-                  <p className="mt-1.5 text-sm text-zinc-600 dark:text-zinc-500">
+                  <h3 className="text-base font-bold text-[var(--portfolio-fg)] sm:text-lg">{edu.institution}</h3>
+                  <p className="mt-1.5 text-sm text-[var(--portfolio-fg-muted)]">
                     {edu.degree}
                     {edu.field ? ` · ${edu.field}` : ''}
                   </p>
-                  <p className="mt-2 text-xs font-medium tabular-nums text-zinc-500 dark:text-zinc-600">
+                  <p className="mt-2 text-xs font-medium tabular-nums text-[var(--portfolio-fg-muted)]">
                     {edu.startDate}
                     {edu.endDate ? ` — ${edu.endDate}` : ''}
                     {edu.gpa ? ` · GPA ${edu.gpa}` : ''}
@@ -296,17 +297,17 @@ export function PortfolioClassicMonoView({
               {content.projects.map((project, idx) => (
                 <article key={`proj-${idx}`}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 sm:text-lg">{project.name}</h3>
+                    <h3 className="text-base font-bold text-[var(--portfolio-fg)] sm:text-lg">{project.name}</h3>
                   </div>
                   {project.description ? (
-                    <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:mt-3">{project.description}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)] sm:mt-3">{project.description}</p>
                   ) : null}
                   <PortfolioProjectLinkChips project={project} neu={false} className="mt-3" />
-                  {project.bullets && project.bullets.length > 0 ? (
-                    <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                      {project.bullets.map((b, i) => (
+                  {hasVisibleBullets(project.bullets) ? (
+                    <ul className="mt-4 space-y-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
+                      {visibleBullets(project.bullets).map((b, i) => (
                         <li key={i} className="flex gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-600" aria-hidden />
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
                           <span>{b}</span>
                         </li>
                       ))}
@@ -325,7 +326,7 @@ export function PortfolioClassicMonoView({
               {content.skills.map((skill) => (
                 <span
                   key={skill}
-                  className="border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium leading-none text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300"
+                  className="border border-[var(--portfolio-border)] bg-[var(--portfolio-surface)] px-2.5 py-1 text-xs font-medium leading-none text-zinc-700 dark:border-zinc-700  dark:text-zinc-300"
                 >
                   {skill}
                 </span>
@@ -337,10 +338,10 @@ export function PortfolioClassicMonoView({
         {content.awards && content.awards.filter(Boolean).length > 0 && (
           <section className="mb-14 sm:mb-16">
             <SectionTitle>Awards</SectionTitle>
-            <ul className="space-y-2.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <ul className="space-y-2.5 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
               {content.awards.filter(Boolean).map((a, i) => (
                 <li key={i} className="flex gap-3">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-600" aria-hidden />
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
                   <span>{a}</span>
                 </li>
               ))}
@@ -354,12 +355,12 @@ export function PortfolioClassicMonoView({
             <div className="space-y-8">
               {content.extracurricular.map((block, idx) => (
                 <article key={`ex-${idx}`}>
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">{block.title}</h3>
-                  {block.bullets.length > 0 ? (
-                    <ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                      {block.bullets.map((b, i) => (
+                  <h3 className="text-base font-bold text-[var(--portfolio-fg)]">{block.title}</h3>
+                  {hasVisibleBullets(block.bullets) ? (
+                    <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
+                      {visibleBullets(block.bullets).map((b, i) => (
                         <li key={i} className="flex gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-600" aria-hidden />
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
                           <span>{b}</span>
                         </li>
                       ))}
@@ -376,11 +377,11 @@ export function PortfolioClassicMonoView({
             {content.otherSections.map((block, idx) => (
               <div key={`other-${idx}`}>
                 <SectionTitle>{block.title || 'Section'}</SectionTitle>
-                {block.bullets.length > 0 ? (
-                  <ul className="space-y-2.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                    {block.bullets.map((b, i) => (
+                {hasVisibleBullets(block.bullets) ? (
+                  <ul className="space-y-2.5 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
+                    {visibleBullets(block.bullets).map((b, i) => (
                       <li key={i} className="flex gap-3">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-600" aria-hidden />
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
                         <span>{b}</span>
                       </li>
                     ))}
@@ -392,7 +393,7 @@ export function PortfolioClassicMonoView({
         )}
 
         {!narrowLayout ? (
-          <div className="mt-16 border-t border-zinc-200 bg-zinc-100/80 px-5 py-6 sm:mt-20 sm:px-6 sm:py-8 dark:border-zinc-800 dark:bg-zinc-900/50">
+          <div className="mt-16 border-t border-[var(--portfolio-border)] bg-[color-mix(in_srgb,var(--portfolio-fg)_6%,var(--portfolio-bg))] px-5 py-6 sm:mt-20 sm:px-6 sm:py-8 dark:border-zinc-800 dark:bg-[color-mix(in_srgb,var(--portfolio-fg)_8%,var(--portfolio-bg))]">
             <PortfolioPublicFooter neu={false} label="Published profile" band />
           </div>
         ) : null}

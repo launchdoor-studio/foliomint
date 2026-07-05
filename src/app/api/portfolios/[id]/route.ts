@@ -10,6 +10,13 @@ import { sendPortfolioPublishedEmail } from '@/lib/email';
 import { portfolioSiteBasePath, validatePublicHandleForSave } from '@/lib/public-handle';
 import { normalizePublicDomain } from '@/lib/slug';
 import { sanitizePortfolioAccentForStorage } from '@/lib/portfolio-accent';
+import {
+  extractPortfolioThemeColors,
+  mergeThemeSettingsColors,
+  sanitizePortfolioThemeColors,
+  type PortfolioThemeColors,
+  type PortfolioThemeSettings,
+} from '@/lib/portfolio-theme-colors';
 import type { PortfolioContent, PortfolioTheme } from '@/types';
 
 interface RouteContext {
@@ -41,6 +48,9 @@ export async function GET(_req: Request, { params }: RouteContext) {
     title: portfolio.title,
     theme: portfolio.theme,
     accentColor: portfolio.accentColor,
+    themeColors: extractPortfolioThemeColors(
+      portfolio.themeSettings as PortfolioThemeSettings | null,
+    ),
     isPublished: portfolio.isPublished,
     groqConsent: portfolio.groqConsent,
     content: portfolio.content as unknown as PortfolioContent,
@@ -83,6 +93,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     customDomain: string | null;
     /** Clean public username for `/u/{handle}`; omit or null to clear. */
     publicHandle: string | null;
+    themeColors?: PortfolioThemeColors;
   }>;
 
   if (body.theme !== undefined) {
@@ -106,6 +117,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     customDomainVerified?: boolean;
     domainVerificationToken?: string | null;
     publicHandle?: string | null;
+    themeSettings?: PortfolioThemeSettings;
     updatedAt: Date;
   } = { updatedAt: new Date() };
 
@@ -126,6 +138,20 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       return NextResponse.json({ error: 'Invalid accent color (use #RGB or #RRGGBB)' }, { status: 400 });
     }
     set.accentColor = next;
+  }
+
+  if (body.themeColors !== undefined) {
+    const sanitized = sanitizePortfolioThemeColors(body.themeColors);
+    if (sanitized === null && body.themeColors !== null) {
+      return NextResponse.json(
+        { error: 'Invalid theme color (use #RGB or #RRGGBB for each field)' },
+        { status: 400 },
+      );
+    }
+    set.themeSettings = mergeThemeSettingsColors(
+      existing.themeSettings as PortfolioThemeSettings | null,
+      sanitized ?? extractPortfolioThemeColors(null),
+    );
   }
 
   if (typeof body.isPublished === 'boolean') {

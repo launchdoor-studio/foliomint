@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 
 /** Inner page wrapper: follows shell theme (light / dark). */
 export function portfolioShellClass(_neu: boolean): string {
-  return 'relative min-h-full text-zinc-900 dark:text-zinc-100';
+  return 'relative min-h-full text-[var(--portfolio-fg)]';
 }
 
 /**
@@ -23,16 +23,14 @@ export function portfolioNavPillClass(neu: boolean): string {
   return neu
     ? cn(
         'inline-flex items-center justify-center border-4 px-4 py-2 text-sm font-bold no-underline',
-        'border-zinc-900 bg-white text-zinc-900 shadow-[4px_4px_0_0_rgb(24_24_27)]',
+        'border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)] text-[var(--portfolio-fg)]',
+        'shadow-[4px_4px_0_0_var(--portfolio-shadow)]',
         'transition-transform hover:translate-x-px hover:translate-y-px',
-        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[4px_4px_0_0_rgb(228_228_231)]',
       )
     : cn(
-        'inline-flex items-center justify-center border border-zinc-300 bg-white px-5 py-2',
-        'text-sm font-semibold text-zinc-700 no-underline transition-colors',
-        'hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
-        'dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300',
-        'dark:hover:border-[var(--portfolio-accent)] dark:hover:text-[var(--portfolio-accent)]',
+        'inline-flex items-center justify-center border border-[var(--portfolio-border)]',
+        'bg-[var(--portfolio-surface-elevated)] px-5 py-2 text-sm font-semibold text-[var(--portfolio-fg)]',
+        'no-underline transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
       );
 }
 
@@ -46,17 +44,13 @@ export function portfolioEyebrowClass(neu: boolean): string {
 
 /** Divider under hero / page intro (portfolio hero + blog headers). */
 export function portfolioHeaderRuleClass(neu: boolean): string {
-  return cn(
-    'border-b pb-12 sm:pb-16',
-    neu ? 'border-zinc-300 dark:border-zinc-600/80' : 'border-zinc-200 dark:border-zinc-700',
-  );
+  return cn('border-b border-[var(--portfolio-border)] pb-12 sm:pb-16', neu && 'border-[var(--portfolio-border)]');
 }
 
 /** Section titles (Skills, Experience, …). */
 export function portfolioSectionTitleRowClass(neu: boolean): string {
   return cn(
-    'mb-8 flex items-center gap-3 text-[1.35rem] font-semibold tracking-tight text-zinc-900 sm:text-2xl',
-    'dark:text-zinc-100',
+    'mb-8 flex items-center gap-3 text-[1.35rem] font-semibold tracking-tight text-[var(--portfolio-fg)] sm:text-2xl',
     neu && 'uppercase tracking-[0.12em]',
   );
 }
@@ -64,9 +58,8 @@ export function portfolioSectionTitleRowClass(neu: boolean): string {
 export function portfolioSectionAccentClass(neu: boolean): string {
   return neu
     ? cn(
-        'block h-4 w-4 shrink-0 rounded-none border-4 border-zinc-900 bg-[var(--portfolio-accent)]',
-        'shadow-[4px_4px_0_0_rgb(24_24_27)]',
-        'dark:border-zinc-200 dark:shadow-[4px_4px_0_0_rgb(228_228_231)]',
+        'block h-4 w-4 shrink-0 rounded-none border-4 border-[var(--portfolio-fg)] bg-[var(--portfolio-accent)]',
+        'shadow-[4px_4px_0_0_var(--portfolio-shadow)]',
       )
     : 'block h-9 w-1 shrink-0 bg-[var(--portfolio-accent)]';
 }
@@ -75,15 +68,14 @@ export function portfolioSectionAccentClass(neu: boolean): string {
 export function portfolioCardClass(neu: boolean): string {
   return neu
     ? cn(
-        'rounded-none border-4 border-zinc-900 bg-white/95 shadow-[6px_6px_0_0_rgb(24_24_27)]',
-        'dark:border-zinc-200 dark:bg-zinc-900/70 dark:shadow-[6px_6px_0_0_rgb(228_228_231)]',
+        'rounded-none border-4 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)]/95',
+        'shadow-[6px_6px_0_0_var(--portfolio-shadow)]',
       )
     : cn(
-        'border border-zinc-200 bg-white/90',
+        'border border-[var(--portfolio-border)] bg-[var(--portfolio-surface-elevated)]/90',
         'transition-[transform,box-shadow,border-color] duration-300',
         'hover:-translate-y-0.5 hover:border-[var(--portfolio-accent)] hover:shadow-md',
-        'dark:border-zinc-700/90 dark:bg-zinc-900/45',
-        'dark:hover:border-[var(--portfolio-accent)]',
+        'hover:border-[var(--portfolio-accent)]',
       );
 }
 
@@ -93,13 +85,12 @@ export const PORTFOLIO_CARD_PAD = 'p-6 sm:p-7';
 export function portfolioSkillChipClass(neu: boolean): string {
   return neu
     ? cn(
-        'rounded-none border-2 border-zinc-900 bg-white px-2 py-0.5 text-xs font-bold leading-none text-zinc-900',
-        'shadow-[3px_3px_0_0_rgb(24_24_27)]',
-        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[3px_3px_0_0_rgb(228_228_231)]',
+        'rounded-none border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)] px-2 py-0.5',
+        'text-xs font-bold leading-none text-[var(--portfolio-fg)] shadow-[3px_3px_0_0_var(--portfolio-shadow)]',
       )
     : cn(
-        'border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium leading-none text-zinc-700',
-        'dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300',
+        'border border-[var(--portfolio-border)] bg-[var(--portfolio-surface)] px-2.5 py-1',
+        'text-xs font-medium leading-none text-[var(--portfolio-fg-muted)]',
       );
 }
 
@@ -107,10 +98,9 @@ export function portfolioSkillChipClass(neu: boolean): string {
 export function portfolioInlineLinkClass(neu: boolean): string {
   return neu
     ? cn(
-        'inline-flex items-center border-2 border-zinc-900 bg-white px-3 py-1.5',
-        'text-xs font-bold text-zinc-900 shadow-[3px_3px_0_0_rgb(24_24_27)] no-underline',
+        'inline-flex items-center border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)] px-3 py-1.5',
+        'text-xs font-bold text-[var(--portfolio-fg)] shadow-[3px_3px_0_0_var(--portfolio-shadow)] no-underline',
         'transition-transform hover:translate-x-px hover:translate-y-px',
-        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[3px_3px_0_0_rgb(228_228_231)]',
       )
     : 'text-xs font-semibold text-[var(--portfolio-accent)] underline-offset-4 hover:underline';
 }
@@ -119,20 +109,16 @@ export function portfolioInlineLinkClass(neu: boolean): string {
 export function portfolioOutboundIconButtonClass(neu: boolean): string {
   return neu
     ? cn(
-        'inline-flex h-10 w-10 items-center justify-center border-4 border-zinc-900 bg-white',
-        'text-zinc-900 shadow-[4px_4px_0_0_rgb(24_24_27)] no-underline',
-        'transition-transform hover:translate-x-px hover:translate-y-px',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2',
-        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[4px_4px_0_0_rgb(228_228_231)]',
-        'dark:focus-visible:ring-zinc-200',
+        'inline-flex h-10 w-10 items-center justify-center border-4 border-[var(--portfolio-fg)]',
+        'bg-[var(--portfolio-surface-elevated)] text-[var(--portfolio-fg)] shadow-[4px_4px_0_0_var(--portfolio-shadow)]',
+        'no-underline transition-transform hover:translate-x-px hover:translate-y-px',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portfolio-fg)] focus-visible:ring-offset-2',
       )
     : cn(
-        'inline-flex h-9 w-9 items-center justify-center border border-zinc-300 bg-white',
-        'text-zinc-500 no-underline transition-colors',
+        'inline-flex h-9 w-9 items-center justify-center border border-[var(--portfolio-border)]',
+        'bg-[var(--portfolio-surface-elevated)] text-[var(--portfolio-fg-muted)] no-underline transition-colors',
         'hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portfolio-accent)] focus-visible:ring-offset-2',
-        'dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300',
-        'dark:hover:border-[var(--portfolio-accent)] dark:hover:text-[var(--portfolio-accent)]',
       );
 }
 
@@ -140,22 +126,19 @@ export function portfolioOutboundIconButtonClass(neu: boolean): string {
 export function portfolioOutboundChipClass(neu: boolean): string {
   return neu
     ? cn(
-        'inline-flex items-center justify-center border-4 border-zinc-900 bg-white px-4 py-2',
-        'text-sm font-bold text-zinc-900 shadow-[4px_4px_0_0_rgb(24_24_27)] no-underline',
-        'transition-transform hover:translate-x-px hover:translate-y-px',
-        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100 dark:shadow-[4px_4px_0_0_rgb(228_228_231)]',
+        'inline-flex items-center justify-center border-4 border-[var(--portfolio-fg)]',
+        'bg-[var(--portfolio-surface-elevated)] px-4 py-2 text-sm font-bold text-[var(--portfolio-fg)]',
+        'shadow-[4px_4px_0_0_var(--portfolio-shadow)] no-underline transition-transform hover:translate-x-px hover:translate-y-px',
       )
     : cn(
-        'inline-flex items-center justify-center border border-zinc-300 bg-white px-4 py-2',
-        'text-sm font-semibold text-zinc-700 no-underline transition-colors',
-        'hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
-        'dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300',
-        'dark:hover:border-[var(--portfolio-accent)] dark:hover:text-[var(--portfolio-accent)]',
+        'inline-flex items-center justify-center border border-[var(--portfolio-border)]',
+        'bg-[var(--portfolio-surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--portfolio-fg)]',
+        'no-underline transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
       );
 }
 
 export function portfolioDateTextClass(): string {
-  return 'text-xs font-medium tabular-nums text-zinc-500 dark:text-zinc-500';
+  return 'text-xs font-medium tabular-nums text-[var(--portfolio-fg-muted)]';
 }
 
 export function portfolioDateBadgeClass(neu: boolean): string {
@@ -163,8 +146,7 @@ export function portfolioDateBadgeClass(neu: boolean): string {
     portfolioDateTextClass(),
     neu &&
       cn(
-        'border-2 border-zinc-900 bg-white px-2 py-1 font-bold text-zinc-900',
-        'dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100',
+        'border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)] px-2 py-1 font-bold text-[var(--portfolio-fg)]',
       ),
   );
 }
@@ -172,27 +154,35 @@ export function portfolioDateBadgeClass(neu: boolean): string {
 /** Bullet list marker line. */
 export function portfolioBulletLineClass(neu: boolean): string {
   return cn(
-    'flex gap-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400',
-    neu && 'text-zinc-800 dark:text-zinc-200',
+    'flex gap-3 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]',
+    neu && 'text-[var(--portfolio-fg)]',
   );
 }
 
 export function portfolioBulletDotClass(neu: boolean): string {
   return neu
     ? cn(
-        'mt-2.5 h-2 w-2 shrink-0 rounded-none border-2 border-zinc-900 bg-[var(--portfolio-accent)]',
-        'dark:border-zinc-200',
+        'mt-2.5 h-2 w-2 shrink-0 rounded-none border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-accent)]',
       )
-    : 'mt-2 h-1.5 w-1.5 shrink-0 bg-zinc-400 dark:bg-zinc-600';
+    : 'mt-2 h-1.5 w-1.5 shrink-0 bg-[var(--portfolio-fg-muted)]';
 }
 
 export function portfolioFooterRuleClass(neu: boolean): string {
   return cn(
-    'mt-16 flex flex-col gap-3 border-t border-zinc-200 pt-8 sm:mt-20 sm:flex-row sm:items-center sm:justify-between sm:pt-10',
-    'dark:border-zinc-700',
-    neu && 'border-zinc-300 dark:border-zinc-600',
+    'mt-16 flex flex-col gap-3 border-t border-[var(--portfolio-border)] pt-8 sm:mt-20 sm:flex-row sm:items-center sm:justify-between sm:pt-10',
+    neu && 'border-[var(--portfolio-border)]',
   );
 }
 
 /** Space between major sections on the page. */
 export const PORTFOLIO_SECTION_GAP = 'mt-12 space-y-16 sm:mt-16 sm:space-y-20 lg:mt-20';
+
+/** Muted body copy on public portfolio pages. */
+export function portfolioMutedTextClass(): string {
+  return 'text-[var(--portfolio-fg-muted)]';
+}
+
+/** Primary headings on public portfolio pages. */
+export function portfolioHeadingClass(): string {
+  return 'text-[var(--portfolio-fg)]';
+}

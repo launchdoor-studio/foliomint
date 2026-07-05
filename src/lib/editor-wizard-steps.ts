@@ -1,8 +1,13 @@
 export const EDITOR_WIZARD_STEPS = [
   {
     id: 'profile',
-    title: 'Profile & appearance',
-    description: 'Accent color, portfolio title, contact details, and your introduction.',
+    title: 'Profile',
+    description: 'Portfolio title, contact details, headline, and your introduction.',
+  },
+  {
+    id: 'appearance',
+    title: 'Site colors',
+    description: 'Accent, background, and text colors for light and dark mode on your published site.',
   },
   {
     id: 'skills',

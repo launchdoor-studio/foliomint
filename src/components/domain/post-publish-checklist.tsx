@@ -193,7 +193,7 @@ function PublishTipsCard() {
         <section
           id={AFTER_PUBLISH_CHECKLIST_ID}
           aria-label="Published site — optional checklist"
-          className="rounded-lg border border-border/50 bg-muted/20 shadow-sm dark:border-white/10 dark:bg-muted/10"
+          className="rounded-lg border border-border/50 bg-muted/20 shadow-sm"
         >
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2.5 sm:px-5 sm:py-3">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -246,7 +246,7 @@ function RestorePublishTipsLink() {
   const qs = new URLSearchParams({ [SHOW_PUBLISH_TIPS_PARAM]: '1' });
   return (
     <div className="mx-auto max-w-7xl px-4 pt-2 sm:px-6 lg:px-8">
-      <p className="rounded-lg border border-dashed border-border/70 bg-muted/15 px-3 py-2.5 text-center text-xs text-muted-foreground dark:border-white/10">
+      <p className="rounded-lg border border-dashed border-border/70 bg-muted/15 px-3 py-2.5 text-center text-xs text-muted-foreground">
         Publishing tips are hidden.{' '}
         <Link
           href={`${pathname ?? ''}?${qs.toString()}`}

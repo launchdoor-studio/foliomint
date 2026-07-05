@@ -34,6 +34,7 @@ import { TrialBanner } from '@/components/domain/trial-banner';
 import { scoreResumeHealth } from '@/lib/resume-health';
 import { buildMintResumeHealthSnapshot } from '@/lib/mint/resume-health-guidance';
 import { EDITOR_WIZARD_STEPS } from '@/lib/editor-wizard-steps';
+import { EMPTY_PORTFOLIO_THEME_COLORS } from '@/lib/portfolio-theme-colors';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
 import { cn } from '@/lib/utils';
 import type { EditorPageState } from '@/types/editor-page';
@@ -83,6 +84,7 @@ export default function EditorPage() {
           title: data.title,
           theme: ACTIVE_PORTFOLIO_THEME,
           accentColor: data.accentColor ?? null,
+          themeColors: data.themeColors ?? EMPTY_PORTFOLIO_THEME_COLORS,
           isPublished: data.isPublished,
           content: data.content,
         };
@@ -243,7 +245,7 @@ export default function EditorPage() {
   );
   const editorCardTitleClass = 'font-sans text-base font-semibold tracking-tight text-foreground';
   const editorRepeatItemClass = cn(
-    'editor-nested-card rounded-xl border-2 border-border p-5 sm:p-6 dark:border-white/10',
+    'editor-nested-card rounded-xl border-2 border-border p-5 sm:p-6',
   );
 
   const monoInput = (extra?: string) => cn(editorMonoControlClass, 'h-11', extra);
@@ -293,6 +295,7 @@ export default function EditorPage() {
             publicHandle={state.publicHandle}
             theme={ACTIVE_PORTFOLIO_THEME}
             accentColor={state.accentColor}
+            themeColors={state.themeColors}
             isPublished={state.isPublished}
             portfolioId={state.id}
             socialLinks={integrationSocialLinks}
@@ -312,7 +315,7 @@ export default function EditorPage() {
         {/* Editor toolbar */}
         <div
           id="editor-toolbar"
-          className="sticky top-16 z-40 border-b-2 border-foreground bg-background/90 backdrop-blur-lg"
+          className="sticky top-16 z-40 border-b-2 border-foreground bg-background/90 backdrop-blur-lg dark:bg-card/90"
         >
           <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2 sm:px-6 lg:px-8">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -349,17 +352,35 @@ export default function EditorPage() {
               >
                 {saving ? 'Saving…' : isDirty ? 'Unsaved changes' : 'Saved'}
               </span>
+              <span className="hidden rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:inline">
+                {PORTFOLIO_THEME_LABEL}
+              </span>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
+              <ResumeReimportButton portfolioId={state.id} onImported={handleReimport} />
+              <Button asChild variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5">
+                <a
+                  href={`/api/portfolios/${state.id}/export/resume`}
+                  download
+                  title="Download resume PDF matching your portfolio content"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Resume PDF</span>
+                  <span className="sm:hidden">PDF</span>
+                </a>
+              </Button>
               <ResumeHealthToolbarToggle
                 open={healthPanelOpen}
                 onToggle={() => setHealthPanelOpen((open) => !open)}
                 health={resumeHealth}
               />
-              <span className="hidden rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground sm:inline">
-                {PORTFOLIO_THEME_LABEL}
-              </span>
-              <Button asChild variant="secondary" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5">
+
+              <span
+                className="mx-0.5 hidden h-6 w-px shrink-0 bg-border sm:block"
+                aria-hidden
+              />
+
+              <Button asChild variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5">
                 <Link
                   href={`/dashboard/portfolios/${state.id}/manage`}
                   title="Portfolio management: blog, custom domain, live URL, and shortcuts—outside the step-by-step editor below."
@@ -370,45 +391,47 @@ export default function EditorPage() {
                 </Link>
               </Button>
               {state.isPublished && (
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="outline" size="sm" className="h-8 shrink-0 gap-1.5 px-2.5">
                   <Link href={liveSitePath} target="_blank">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Preview
+                    <Eye className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Preview</span>
                   </Link>
                 </Button>
               )}
-              <ResumeReimportButton portfolioId={state.id} onImported={handleReimport} />
-              <Button asChild variant="outline" size="sm">
-                <a
-                  href={`/api/portfolios/${state.id}/export/resume`}
-                  download
-                  title="Download resume PDF matching your portfolio content"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Resume PDF
-                </a>
+
+              <span
+                className="mx-0.5 hidden h-6 w-px shrink-0 bg-border sm:block"
+                aria-hidden
+              />
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 shrink-0 gap-1.5 px-2.5"
+                onClick={() => handleSave()}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span className="hidden sm:inline">Saving</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Save</span>
+                  </>
+                )}
               </Button>
               <Button
                 variant={state.isPublished ? 'outline' : 'default'}
                 size="sm"
+                className="h-8 shrink-0 gap-1.5 px-2.5"
                 onClick={() => handleSave({ isPublished: !state.isPublished })}
                 disabled={saving}
               >
-                <Globe className="mr-2 h-4 w-4" />
+                <Globe className="h-3.5 w-3.5" />
                 {state.isPublished ? 'Unpublish' : 'Publish'}
-              </Button>
-              <Button size="sm" onClick={() => handleSave()} disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save
-                  </>
-                )}
               </Button>
             </div>
           </div>

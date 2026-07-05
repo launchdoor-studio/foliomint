@@ -3,6 +3,7 @@
 import { ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { MintAvatar } from '@/components/domain/mint/mint-avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -17,12 +18,17 @@ export function showPortfolioPublishedToast(livePath: string) {
           'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
         )}
       >
-        <p className="text-sm font-semibold leading-snug tracking-tight text-foreground">
-          Portfolio published
-        </p>
-        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-          Your site is live. Open it in a new tab to see exactly what visitors see.
-        </p>
+        <div className="flex items-start gap-3">
+          <MintAvatar pose="celebrate" size={64} className="shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold leading-snug tracking-tight text-foreground">
+              Portfolio published
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Your site is live. Open it in a new tab to see exactly what visitors see.
+            </p>
+          </div>
+        </div>
         <Button asChild className="mt-4 h-10 w-full shadow-sm" size="default">
           <a
             href={livePath}

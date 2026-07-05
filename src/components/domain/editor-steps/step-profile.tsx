@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { EditorField, EditorFormPanel, EditorSensitiveContactNotice } from '@/components/domain/editor-form-ui';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
 import { MintImproveButton } from '@/components/domain/mint-improve-diff';
-import { normalizePortfolioAccent } from '@/lib/portfolio-accent';
 
 export function EditorStepProfile(ctx: EditorStepContext) {
   const { state, setState, updateContent, handleSave, saving, monoInput, monoTextarea } = ctx;
@@ -13,37 +12,6 @@ export function EditorStepProfile(ctx: EditorStepContext) {
   return (
     <div className="space-y-6">
       <EditorFormPanel title="Personal info">
-        <EditorField
-          id="editor-accent-color"
-          label="Portfolio accent"
-          hint="Used for highlights and links on your public site. Visitors switch light/dark with the toggle on the published page (independent of FolioMint dashboard theme)."
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              type="color"
-              aria-label="Pick accent color"
-              className="h-10 w-14 cursor-pointer rounded-md border border-input bg-background p-1"
-              value={normalizePortfolioAccent(state.accentColor)}
-              onChange={(e) => void handleSave({ accentColor: e.target.value })}
-              disabled={saving}
-            />
-            <Input
-              id="editor-accent-color-hex"
-              className={monoInput('max-w-[9.5rem]')}
-              value={state.accentColor ?? ''}
-              placeholder="#34d399"
-              spellCheck={false}
-              onChange={(e) =>
-                setState((prev) => (prev ? { ...prev, accentColor: e.target.value || null } : prev))
-              }
-              onBlur={(e) => {
-                const v = e.target.value.trim() || null;
-                void handleSave({ accentColor: v });
-              }}
-              disabled={saving}
-            />
-          </div>
-        </EditorField>
         <EditorField
           id="editor-portfolio-title"
           label="Portfolio title"

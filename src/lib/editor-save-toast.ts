@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 
 import { showPortfolioPublishedToast } from '@/components/domain/portfolio-published-toast';
+import { isLookUpdate } from '@/lib/editor-save-payload';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
 import type { EditorPageState } from '@/types/editor-page';
 
@@ -35,7 +36,7 @@ export function toastAfterPortfolioSave(
 
   const keys = Object.keys(updates) as (keyof EditorPageState)[];
   const onlyTheme = keys.length === 1 && keys[0] === 'theme';
-  const onlyLookKeys = keys.every((k) => k === 'theme' || k === 'accentColor');
+  const onlyLook = isLookUpdate(updates);
 
   if (onlyTheme) {
     const label = next.theme === 'neubrutalism' ? 'Neubrutalism' : 'Classic';
@@ -45,9 +46,16 @@ export function toastAfterPortfolioSave(
     return;
   }
 
-  if (onlyLookKeys && keys.includes('theme')) {
+  if (onlyLook && keys.includes('theme')) {
     toast.success('Look updated', {
-      description: 'Theme and accent preferences saved.',
+      description: 'Theme, accent, and colors saved.',
+    });
+    return;
+  }
+
+  if (onlyLook) {
+    toast.success('Colors updated', {
+      description: 'Your portfolio look settings were saved.',
     });
     return;
   }

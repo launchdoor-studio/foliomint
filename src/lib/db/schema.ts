@@ -1,5 +1,7 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
+import type { PortfolioThemeSettings } from '@/lib/portfolio-theme-colors';
+
 type SubscriptionStatus = 'free' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
 type PortfolioStatus = 'draft' | 'published' | 'unpublished' | 'archived';
 type PortfolioTheme = 'classic' | 'neubrutalism' | 'editorial' | 'minimal' | 'terminal';
@@ -78,13 +80,7 @@ export const portfolios = sqliteTable(
     content: text('content', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
     theme: text('theme').$type<PortfolioTheme>().default('neubrutalism').notNull(),
     themeSettings: text('theme_settings', { mode: 'json' })
-      .$type<{
-        palette?: string;
-        fontPair?: string;
-        density?: 'compact' | 'comfortable' | 'spacious';
-        borderStyle?: 'soft' | 'bold' | 'poster';
-        heroStyle?: 'stacked' | 'split' | 'editorial' | 'cards';
-      }>()
+      .$type<PortfolioThemeSettings>()
       .default({ palette: 'mint-orange', density: 'comfortable', borderStyle: 'bold', heroStyle: 'cards' }),
     /** Hex accent for public portfolio (links, chips, markers). Default applied in UI when null. */
     accentColor: text('accent_color'),

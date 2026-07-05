@@ -49,7 +49,7 @@ export default function SignInPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex justify-center">
-          <Logo size={48} showText={false} />
+          <Logo size={56} showText={false} />
         </div>
         <Card>
           <CardHeader className="text-center">

@@ -34,7 +34,7 @@ export function MintAvatar({
       width={size}
       height={size}
       className={cn(
-        pose === 'peeking' ? 'object-contain object-bottom' : 'rounded-full object-cover',
+        pose === 'peeking' ? 'object-contain object-bottom' : 'rounded-full object-contain',
         className,
       )}
       unoptimized

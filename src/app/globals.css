@@ -42,34 +42,43 @@
     --radius: 0.375rem;
   }
 
+  /**
+   * Dark: near-black #101010 base (0 0% 6%) with GREEN only as a tint —
+   * elevated surfaces carry a subtle green cast and the aurora adds a faint
+   * green wash. Mint stays the accent. Borders use the cream "ink" so
+   * border-border/xx reads with the same weight as light mode.
+   */
   .dark {
-    --background: 165 42% 6%;
-    --foreground: 42 55% 93%;
+    --background: 0 0% 6%;
+    --foreground: 44 42% 92%;
 
-    --card: 164 34% 10%;
-    --card-foreground: 42 55% 93%;
+    --card: 165 8% 11%;
+    --card-foreground: 44 42% 92%;
 
-    --popover: 164 34% 10%;
-    --popover-foreground: 42 55% 93%;
+    --popover: 165 8% 11%;
+    --popover-foreground: 44 42% 92%;
 
-    --primary: 166 34% 65%;
-    --primary-foreground: 165 42% 6%;
+    --primary: 162 42% 62%;
+    --primary-foreground: 0 0% 6%;
 
-    --secondary: 162 32% 54%;
-    --secondary-foreground: 165 42% 6%;
+    --secondary: 166 32% 50%;
+    --secondary-foreground: 0 0% 6%;
 
-    --muted: 164 24% 16%;
-    --muted-foreground: 42 28% 74%;
+    --muted: 165 7% 17%;
+    --muted-foreground: 44 16% 72%;
 
-    --accent: 168 29% 22%;
-    --accent-foreground: 42 55% 93%;
+    --accent: 167 18% 24%;
+    --accent-foreground: 44 42% 92%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 62% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 42 55% 93%;
-    --input: 42 55% 93%;
-    --ring: 166 34% 65%;
+    /* Border = the dark "ink" (cream), mirroring light where --border == the
+     * evergreen ink. This makes border-border/xx read with the SAME weight in
+     * both themes, so no faint dark-only border overrides are needed. */
+    --border: 44 26% 78%;
+    --input: 44 26% 78%;
+    --ring: 162 42% 62%;
   }
 }
 
@@ -131,16 +140,13 @@
     @apply border-border/80 bg-card;
   }
 
-  .dark .editor-workspace .editor-form-card {
-    @apply border-white/[0.12] bg-[hsl(200_14%_12%)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)];
-  }
-
   .editor-workspace .editor-nested-card {
     @apply border-border/70 bg-muted/40;
   }
 
+  /* Same border/fill logic in both themes — dark only deepens the inset fill. */
   .dark .editor-workspace .editor-nested-card {
-    @apply border-white/[0.11] bg-[hsl(200_13%_10.5%)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.035)];
+    @apply bg-muted/25;
   }
 
   .editor-workspace input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
@@ -152,7 +158,7 @@
   .dark .editor-workspace input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
   .dark .editor-workspace textarea,
   .dark .editor-workspace select {
-    @apply border-white/[0.16] bg-[hsl(200_14%_10%)] text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)];
+    @apply shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)];
   }
 }
 
@@ -169,6 +175,17 @@
       radial-gradient(620px circle at 100% 18%, hsl(var(--secondary) / 0.18), transparent 44%),
       radial-gradient(520px circle at 50% 100%, hsl(var(--accent) / 0.32), transparent 50%);
     background-size: 32px 32px, 32px 32px, auto, auto;
+  }
+
+  /**
+   * Dark: keep the pure #101010 background — no green wash. Only the neutral
+   * grid lines remain for subtle texture; the mint glows are removed.
+   */
+  .dark .bg-aurora {
+    background-image:
+      linear-gradient(hsl(var(--foreground) / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.04) 1px, transparent 1px);
+    background-size: 32px 32px, 32px 32px;
   }
 
   .bg-grain {
@@ -200,12 +217,23 @@
   }
 
   .portfolio-public-canvas {
+    --portfolio-bg: var(--portfolio-bg-light);
+    --portfolio-fg: var(--portfolio-fg-light);
+    --portfolio-fg-muted: color-mix(in srgb, var(--portfolio-fg) 62%, var(--portfolio-bg));
+    --portfolio-border: color-mix(in srgb, var(--portfolio-fg) 16%, var(--portfolio-bg));
+    --portfolio-surface: color-mix(in srgb, var(--portfolio-fg) 4%, var(--portfolio-bg));
+    --portfolio-surface-elevated: color-mix(in srgb, var(--portfolio-fg) 7%, var(--portfolio-bg));
+    --portfolio-shadow: var(--portfolio-fg);
+    background-color: var(--portfolio-bg);
+    color: var(--portfolio-fg);
     --portfolio-accent-soft: color-mix(in srgb, var(--portfolio-accent) 18%, transparent);
     --portfolio-accent-softer: color-mix(in srgb, var(--portfolio-accent) 10%, transparent);
     --portfolio-accent-border: color-mix(in srgb, var(--portfolio-accent) 35%, transparent);
   }
 
   html.dark .portfolio-public-canvas {
+    --portfolio-bg: var(--portfolio-bg-dark);
+    --portfolio-fg: var(--portfolio-fg-dark);
     --portfolio-accent-soft: color-mix(in srgb, var(--portfolio-accent) 22%, transparent);
     --portfolio-accent-softer: color-mix(in srgb, var(--portfolio-accent) 12%, transparent);
     --portfolio-accent-border: color-mix(in srgb, var(--portfolio-accent) 42%, transparent);

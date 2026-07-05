@@ -214,7 +214,7 @@ export function GenerateForm({ isAuthed }: { isAuthed: boolean }) {
                 {previewSteps.map((step) => (
                   <div
                     key={step.title}
-                    className="flex flex-col items-center rounded-xl border border-border/60 bg-card/40 px-3 py-5 text-center shadow-sm dark:border-white/10 dark:bg-card/30"
+                    className="flex flex-col items-center rounded-xl border border-border/60 bg-card/40 px-3 py-5 text-center shadow-sm"
                   >
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <step.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />

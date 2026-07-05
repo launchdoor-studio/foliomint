@@ -19,6 +19,8 @@ import {
   portfolioSkillChipClass,
 } from '@/lib/portfolio-public-ui';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
+import type { PortfolioThemeColors } from '@/lib/portfolio-theme-colors';
+import { visibleBullets, hasVisibleBullets } from '@/lib/bullet-textarea';
 import type { SocialLink } from '@/lib/social-links';
 import type { PortfolioContent } from '@/types';
 
@@ -93,9 +95,10 @@ function PortfolioBulletList({
   neu: boolean;
   dense?: boolean;
 }) {
+  const visible = visibleBullets(items);
   return (
     <ul className={dense ? 'space-y-1.5' : 'space-y-2'}>
-      {items.map((b, i) => (
+      {visible.map((b, i) => (
         <li key={i} className={cn(portfolioBulletLineClass(neu), dense && 'text-[13px] leading-relaxed')}>
           <span className={portfolioBulletDotClass(neu)} aria-hidden />
           <span>{b}</span>
@@ -131,8 +134,8 @@ function NeubrutalismPreview({
   const pad = PORTFOLIO_CARD_PAD;
 
   return (
-    <div className="text-zinc-800 dark:text-zinc-200">
-      <header className={cn('border-b border-zinc-300 pb-6 dark:border-zinc-600/80')}>
+    <div className="text-[var(--portfolio-fg)]">
+      <header className={cn('border-b border-[var(--portfolio-border)] pb-6 dark:border-zinc-600/80')}>
         <div
           className={cn(
             'flex flex-col gap-6',
@@ -146,14 +149,14 @@ function NeubrutalismPreview({
                 src={content.profileImageUrl}
                 alt={displayName}
                 className={cn(
-                  'border-4 border-zinc-900 object-cover shadow-[6px_6px_0_0_rgb(24_24_27)] dark:border-zinc-200 dark:shadow-[6px_6px_0_0_rgb(228_228_231)]',
+                  'border-4 border-[var(--portfolio-fg)] object-cover shadow-[6px_6px_0_0_rgb(24_24_27)] dark:border-[var(--portfolio-border)] dark:shadow-[6px_6px_0_0_rgb(228_228_231)]',
                   narrowLayout ? 'h-16 w-16' : 'h-20 w-20 sm:h-24 sm:w-24',
                 )}
               />
             ) : (
               <div
                 className={cn(
-                  'flex items-center justify-center border-4 border-zinc-900 bg-[var(--portfolio-accent-softer)] font-bold text-[var(--portfolio-accent)] shadow-[6px_6px_0_0_rgb(24_24_27)] dark:border-zinc-200 dark:shadow-[6px_6px_0_0_rgb(228_228_231)]',
+                  'flex items-center justify-center border-4 border-[var(--portfolio-fg)] bg-[var(--portfolio-accent-softer)] font-bold text-[var(--portfolio-accent)] shadow-[6px_6px_0_0_rgb(24_24_27)] dark:border-[var(--portfolio-border)] dark:shadow-[6px_6px_0_0_rgb(228_228_231)]',
                   narrowLayout ? 'h-16 w-16 text-lg' : 'h-20 w-20 text-xl sm:h-24 sm:w-24 sm:text-2xl',
                 )}
                 aria-hidden
@@ -168,19 +171,19 @@ function NeubrutalismPreview({
             </p>
             <h1
               className={cn(
-                'break-words font-semibold uppercase tracking-[0.06em] text-zinc-950 dark:text-zinc-50',
+                'break-words font-semibold uppercase tracking-[0.06em] text-[var(--portfolio-fg)]',
                 narrowLayout ? 'text-xl' : 'text-2xl sm:text-3xl',
               )}
             >
               {displayName}
             </h1>
             {content.bio && (
-              <p className="max-w-2xl text-pretty text-sm font-medium leading-relaxed text-zinc-600 dark:text-zinc-300 sm:text-base">
+              <p className="max-w-2xl text-pretty text-sm font-medium leading-relaxed text-[var(--portfolio-fg-muted)] sm:text-base">
                 {content.bio}
               </p>
             )}
             {content.location ? (
-              <p className="flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <p className="flex items-center gap-2 text-sm font-medium text-[var(--portfolio-fg-muted)]">
                 <MapPin className="h-4 w-4 shrink-0" aria-hidden />
                 {content.location}
               </p>
@@ -216,17 +219,17 @@ function NeubrutalismPreview({
                   <div key={`editor-neu-exp-${idx}`} className={cn(card, pad)}>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
-                        <h3 className="text-base font-bold uppercase leading-tight text-zinc-950 dark:text-zinc-50">
+                        <h3 className="text-base font-bold uppercase leading-tight text-[var(--portfolio-fg)]">
                           {exp.role}
                         </h3>
-                        <p className="mt-1 text-sm font-bold text-zinc-600 dark:text-zinc-500">{exp.company}</p>
+                        <p className="mt-1 text-sm font-bold text-[var(--portfolio-fg-muted)]">{exp.company}</p>
                       </div>
-                      <p className="shrink-0 border-2 border-zinc-900 bg-white px-2 py-1 text-xs font-bold text-zinc-900 dark:border-zinc-200 dark:bg-zinc-950 dark:text-zinc-100">
+                      <p className="shrink-0 border-2 border-[var(--portfolio-fg)] bg-white px-2 py-1 text-xs font-bold text-zinc-900 dark:border-[var(--portfolio-border)] dark:bg-zinc-950 dark:text-zinc-100">
                         {dateStr}
                       </p>
                     </div>
-                    {exp.bullets && exp.bullets.length > 0 && (
-                      <div className="mt-4 border-t-2 border-zinc-200 pt-4 dark:border-zinc-700">
+                    {hasVisibleBullets(exp.bullets) && (
+                      <div className="mt-4 border-t-2 border-[var(--portfolio-border)] pt-4 dark:border-zinc-700">
                         <PortfolioBulletList items={exp.bullets} neu={neu} dense />
                       </div>
                     )}
@@ -243,12 +246,12 @@ function NeubrutalismPreview({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {content.education.map((edu, idx) => (
                 <div key={`${edu.institution}-${idx}`} className={cn(card, pad)}>
-                  <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100">{edu.institution}</h3>
-                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
+                  <h3 className="text-base font-semibold leading-snug text-[var(--portfolio-fg)]">{edu.institution}</h3>
+                  <p className="mt-2 text-sm text-[var(--portfolio-fg-muted)]">
                     {edu.degree}
                     {edu.field ? ` · ${edu.field}` : ''}
                   </p>
-                  <p className="mt-3 text-xs font-medium tabular-nums text-zinc-500 dark:text-zinc-600">
+                  <p className="mt-3 text-xs font-medium tabular-nums text-[var(--portfolio-fg-muted)]">
                     {edu.startDate}
                     {edu.endDate ? ` – ${edu.endDate}` : ''}
                     {edu.gpa ? ` · GPA ${edu.gpa}` : ''}
@@ -265,9 +268,9 @@ function NeubrutalismPreview({
             <div className="grid grid-cols-1 gap-4">
               {content.projects.map((project, idx) => (
                 <div key={`${project.name}-${idx}`} className={cn('flex flex-col', card, pad)}>
-                  <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-100">{project.name}</h3>
+                  <h3 className="text-base font-semibold leading-snug text-[var(--portfolio-fg)]">{project.name}</h3>
                   {project.description ? (
-                    <p className="mt-2 text-sm font-medium leading-relaxed text-zinc-600 dark:text-zinc-300">
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--portfolio-fg-muted)]">
                       {project.description}
                     </p>
                   ) : null}
@@ -281,7 +284,7 @@ function NeubrutalismPreview({
                       ))}
                     </div>
                   ) : null}
-                  {project.bullets && project.bullets.length > 0 ? (
+                  {hasVisibleBullets(project.bullets) ? (
                     <div className="mt-4">
                       <PortfolioBulletList items={project.bullets} neu={neu} dense />
                     </div>
@@ -307,8 +310,8 @@ function NeubrutalismPreview({
             <div className="space-y-4">
               {content.extracurricular.map((block, idx) => (
                 <div key={`${block.title}-${idx}`} className={cn(card, pad)}>
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{block.title}</h3>
-                  {block.bullets.length > 0 && (
+                  <h3 className="text-sm font-semibold text-[var(--portfolio-fg)]">{block.title}</h3>
+                  {hasVisibleBullets(block.bullets) && (
                     <div className="mt-3">
                       <PortfolioBulletList items={block.bullets} neu={neu} />
                     </div>
@@ -324,7 +327,7 @@ function NeubrutalismPreview({
             {content.otherSections.map((block, idx) => (
               <div key={`${block.title}-${idx}`}>
                 <SectionHeading neu={neu}>{block.title}</SectionHeading>
-                {block.bullets.length > 0 && (
+                {hasVisibleBullets(block.bullets) && (
                   <div className={cn(card, pad)}>
                     <PortfolioBulletList items={block.bullets} neu={neu} />
                   </div>
@@ -335,7 +338,7 @@ function NeubrutalismPreview({
         )}
       </div>
 
-      <p className="mt-8 border-t border-zinc-200 pt-4 text-center text-[10px] uppercase tracking-[0.14em] text-zinc-600 dark:border-zinc-700 dark:text-zinc-500">
+      <p className="mt-8 border-t border-[var(--portfolio-border)] pt-4 text-center text-[10px] uppercase tracking-[0.14em] text-zinc-600 dark:border-zinc-700 dark:text-[var(--portfolio-fg-muted)]">
         <PreviewSiteLink
           isPublished={isPublished}
           portfolioId={portfolioId}
@@ -352,6 +355,7 @@ export function EditorLivePreview({
   publicHandle,
   theme,
   accentColor,
+  themeColors,
   isPublished,
   portfolioId,
   socialLinks = [],
@@ -361,6 +365,7 @@ export function EditorLivePreview({
   publicHandle?: string | null;
   theme: string;
   accentColor: string | null;
+  themeColors: PortfolioThemeColors;
   isPublished: boolean;
   portfolioId: string;
   socialLinks?: SocialLink[];
@@ -377,7 +382,7 @@ export function EditorLivePreview({
   const siteBasePath = portfolioSiteBasePath({ publicHandle: publicHandle ?? null, slug });
 
   return (
-    <PortfolioPublicShell accentColor={accentColor} embed>
+    <PortfolioPublicShell accentColor={accentColor} themeColors={themeColors} embed>
       <div className="px-3 py-3 sm:px-4 sm:py-4">
         {neu ? (
           <NeubrutalismPreview
@@ -399,7 +404,7 @@ export function EditorLivePreview({
               socialLinks={socialLinks}
               narrowLayout
             />
-            <p className="mt-4 border-t border-zinc-200 pt-3 text-center text-[10px] uppercase tracking-wider text-zinc-600 dark:border-zinc-700 dark:text-zinc-500">
+            <p className="mt-4 border-t border-[var(--portfolio-border)] pt-3 text-center text-[10px] uppercase tracking-wider text-zinc-600 dark:border-zinc-700 dark:text-[var(--portfolio-fg-muted)]">
               <PreviewSiteLink
                 isPublished={isPublished}
                 portfolioId={portfolioId}

@@ -52,16 +52,16 @@ export const metadata: Metadata = {
       'Turn resume raw material into a hosted proof-of-work portfolio you can edit, publish, and grow.',
   },
   icons: {
-    icon: [{ url: '/new-logo.png', type: 'image/png' }],
-    shortcut: ['/new-logo.png'],
-    apple: ['/new-logo.png'],
+    icon: [{ url: '/logo.svg', type: 'image/svg+xml' }],
+    shortcut: ['/logo.svg'],
+    apple: [{ url: '/logo.png', type: 'image/png' }],
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#f1ead5' },
-    { media: '(prefers-color-scheme: dark)', color: '#091611' },
+    { media: '(prefers-color-scheme: dark)', color: '#101010' },
   ],
   width: 'device-width',
   initialScale: 1,

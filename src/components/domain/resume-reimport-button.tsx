@@ -112,7 +112,7 @@ export function ResumeReimportButton({
         zIndexClass="z-[52]"
         header={
           <>
-            <MintAvatar pose="hello" size={36} />
+            <MintAvatar pose="thinking" size={56} />
             <div className="min-w-0 flex-1">
               <p className="font-semibold leading-tight">Re-import from resume</p>
               <p className="text-xs text-muted-foreground">Replace editor content with a fresh parse</p>

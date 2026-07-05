@@ -161,11 +161,10 @@ The editor has: **sticky toolbar**, **6-step wizard** (left/form), **live previe
 
 ### 5.2 Wizard steps (use pills above form to switch)
 
-#### Step 1 — Profile & appearance
+#### Step 1 — Profile
 
 Fields:
 
-- **Portfolio accent** — color picker + hex; drives public site highlights/links
 - **Portfolio title** — dashboard/browser tab title (can differ from display name)
 - **Public username** — see Section 6 (handle)
 - **Display name** — name on public portfolio
@@ -180,38 +179,46 @@ Fields:
 
 **Contact privacy (phone):** Phone numbers are personal. Content saved in the portfolio may be sent to Mint (AI) when parsing, chatting, or improving sections. Many users leave phone blank and use email or LinkedIn. Email is recommended; phone is optional.
 
+#### Step 2 — Site colors
+
+Fields:
+
+- **Portfolio accent** — color picker + hex; drives public site highlights/links
+- **Light theme** — background and text colors for the published site in light mode
+- **Dark theme** — background and text colors for dark mode
+
 **Public site theme:** Visitors toggle light/dark on the **published** portfolio — independent of FolioMint dashboard theme.
 
-#### Step 2 — Skills
+#### Step 3 — Skills
 
 - Add skills one at a time as removable tags
 - Shown as tags on public portfolio
 
-#### Step 3 — Experience
+#### Step 4 — Experience
 
 - Multiple roles: company, role, start/end dates, location, bullet highlights
 - Add/remove roles and bullets
 - Empty state: add manually or use **Re-import resume**
 
-#### Step 4 — Education
+#### Step 5 — Education
 
 - Institution, degree, field, dates
 - Add/remove entries
 
-#### Step 5 — Projects
+#### Step 6 — Projects
 
 - Name, description, technologies, bullets, project links (GitHub, live demo, etc.)
 - Link labels inferred when possible (e.g. GitHub)
 
-#### Step 6 — Awards & more
+#### Step 7 — Awards & more
 
 Subsections:
 
-- **Mint portfolio suggestions** (if present after parse): hero tagline, missing fields, bio variants
 - **Awards** — text list
-- **Certifications** — name, issuer, date
-- **Languages** — language + proficiency
-- **Extracurricular / custom blocks** — title + content
+- **Extracurricular** — titled blocks with bullets
+- **Other sections** — custom titled blocks with bullets
+
+Parse-time suggestions (tagline, bio variants, gaps) are **not** shown on this step — use **Resume health** (toolbar) or **Ask Mint** on the relevant wizard step.
 
 ### 5.3 Live preview
 
@@ -562,7 +569,7 @@ After parse, Mint may suggest:
 - Missing fields to fill
 - Recommended section order
 
-Shown in Resume health panel and Awards & more step.
+Shown in the **Resume health** panel (editor toolbar). Use **Ask Mint** or **Improve with Mint** on Profile for headline and bio help.
 
 ---
 

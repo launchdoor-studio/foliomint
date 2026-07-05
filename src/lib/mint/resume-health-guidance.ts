@@ -16,7 +16,7 @@ const CHECK_EDITOR_STEP: Record<string, string> = {
   metrics: 'Experience or Projects',
   skills: 'Skills',
   contact: 'Profile',
-  gaps: 'Awards & more',
+  gaps: 'Resume health',
 };
 
 export interface MintResumeHealthSnapshot {

@@ -1,4 +1,5 @@
 import type { PortfolioContent } from '@/types';
+import type { PortfolioThemeColors } from '@/lib/portfolio-theme-colors';
 
 /** Client editor page state (portfolio row + parsed content). */
 export interface EditorPageState {
@@ -9,6 +10,7 @@ export interface EditorPageState {
   title: string;
   theme: string;
   accentColor: string | null;
+  themeColors: PortfolioThemeColors;
   isPublished: boolean;
   content: PortfolioContent | null;
 }

@@ -98,7 +98,7 @@ export function EditorLivePreviewPanel({
       className={cn('flex flex-col overflow-hidden', cardClassName)}
       style={{ height: `${height}px` }}
     >
-      <CardHeader className="shrink-0 space-y-1 border-b border-border/60 bg-background/80 pb-4 dark:border-white/10">
+      <CardHeader className="shrink-0 space-y-1 border-b border-border/60 bg-background/80 pb-4">
         <CardTitle className={titleClassName}>Live preview</CardTitle>
         <p className="font-sans text-xs text-muted-foreground">
           Updates as you type. Theme: {themeLabel} — drag the handle below to resize.
@@ -122,7 +122,7 @@ export function EditorLivePreviewPanel({
       <button
         type="button"
         aria-label="Drag to resize live preview height"
-        className="flex h-4 shrink-0 cursor-ns-resize items-center justify-center border-t border-border/60 bg-muted/30 touch-none hover:bg-muted/60 dark:border-white/10"
+        className="flex h-4 shrink-0 cursor-ns-resize items-center justify-center border-t border-border/60 bg-muted/30 touch-none hover:bg-muted/60"
         onPointerDown={onResizePointerDown}
         onPointerMove={onResizePointerMove}
         onPointerUp={finishResize}

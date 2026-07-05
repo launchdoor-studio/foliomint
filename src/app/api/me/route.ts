@@ -36,6 +36,8 @@ export async function GET() {
       email: appUser?.email ?? 'dev@example.com',
       aiAvailable: isPlatformAiAvailable(),
       trialDaysLeft: null,
+      devBypass: isDevAuthBypassed(),
+      paymentBypass: true,
     });
   }
 
@@ -51,5 +53,7 @@ export async function GET() {
     email: appUser?.email ?? null,
     aiAvailable: isPlatformAiAvailable(),
     trialDaysLeft,
+    devBypass: isDevAuthBypassed(),
+    paymentBypass: isPaymentGatingBypassed(),
   });
 }

@@ -41,7 +41,7 @@ export default async function SettingsPage() {
           <Card className="mt-6">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <MintAvatar pose="hello" size={40} />
+                <MintAvatar pose="hello" size={64} />
                 <div>
                   <CardTitle className="text-lg">Mint assistant</CardTitle>
                   <CardDescription>

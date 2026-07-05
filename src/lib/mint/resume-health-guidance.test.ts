@@ -12,7 +12,7 @@ describe('resume health mint guidance', () => {
         id: 'gaps',
         label: 'No major gaps flagged by Mint',
         hint: 'Still open: Project links.',
-        editorStep: 'Awards & more',
+        editorStep: 'Resume health',
       },
     ],
     missingFields: ['Project links'],

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Send, X } from 'lucide-react';
+import { Send, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -76,7 +76,7 @@ export function MintChatPanel() {
         className="relative flex h-[min(560px,calc(100vh-7rem))] w-full max-w-md flex-col overflow-hidden rounded-2xl border bg-background/95 shadow-2xl backdrop-blur-lg"
       >
         <header className="flex items-center gap-3 border-b px-4 py-3">
-          <MintAvatar pose="hello" size={36} />
+          <MintAvatar pose="hello" size={64} />
           <div className="min-w-0 flex-1">
             <p className="font-semibold leading-tight">Mint</p>
             <p className="text-xs text-muted-foreground">Your FolioMint guide</p>
@@ -102,7 +102,7 @@ export function MintChatPanel() {
           ))}
           {isSending && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <MintAvatar pose="thinking" size={56} className="shrink-0 animate-pulse" />
               Mint is thinking…
             </div>
           )}
@@ -177,8 +177,8 @@ export function MintFloatingButton() {
       <div className="flex flex-col items-center">
         <MintAvatar
           pose="peeking"
-          size={88}
-          className="pointer-events-none relative z-10 -mb-8"
+          size={112}
+          className="pointer-events-none relative z-10 -mb-11"
         />
         <button
           type="button"

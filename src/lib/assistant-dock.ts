@@ -15,7 +15,7 @@ export function assistantDockTopClass(chrome: 'app' | 'editor'): string {
 
 /** Visual chrome aligned with navbar + editor toolbar */
 export const assistantDockSurfaceClass =
-  'border-foreground/15 bg-background/95 backdrop-blur-lg dark:border-white/10';
+  'border-foreground/15 bg-background/95 backdrop-blur-lg';
 
 export const assistantDockEdgeTabClass =
-  'rounded-l-xl border border-r-0 bg-background/95 shadow-lg backdrop-blur-lg transition-colors hover:bg-muted dark:border-white/15';
+  'rounded-l-xl border border-r-0 border-border bg-background/95 shadow-lg backdrop-blur-lg transition-colors hover:bg-muted';

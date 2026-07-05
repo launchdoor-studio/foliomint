@@ -2,6 +2,7 @@
 
 import { EDITOR_WIZARD_STEP_COUNT } from '@/components/domain/editor-wizard-workspace';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
+import { EditorStepAppearance } from '@/components/domain/editor-steps/step-appearance';
 import { EditorStepEducation } from '@/components/domain/editor-steps/step-education';
 import { EditorStepExperience } from '@/components/domain/editor-steps/step-experience';
 import { EditorStepMore } from '@/components/domain/editor-steps/step-more';
@@ -15,14 +16,16 @@ export function EditorStepPanels({ stepIndex, ctx }: { stepIndex: number; ctx: E
     case 0:
       return EditorStepProfile(ctx);
     case 1:
-      return EditorStepSkills(ctx);
+      return EditorStepAppearance(ctx);
     case 2:
-      return EditorStepExperience(ctx);
+      return EditorStepSkills(ctx);
     case 3:
-      return EditorStepEducation(ctx);
+      return EditorStepExperience(ctx);
     case 4:
-      return EditorStepProjects(ctx);
+      return EditorStepEducation(ctx);
     case 5:
+      return EditorStepProjects(ctx);
+    case 6:
       return EditorStepMore(ctx);
     default:
       return EditorStepProfile(ctx);

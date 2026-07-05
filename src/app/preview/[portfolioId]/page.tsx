@@ -4,9 +4,14 @@ import { notFound, redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 
 import { PortfolioPublicHome } from '@/components/domain/portfolio-public-home';
+import { PortfolioPublicShell } from '@/components/domain/portfolio-public-shell';
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { portfolios } from '@/lib/db/schema';
+import {
+  extractPortfolioThemeColors,
+  type PortfolioThemeSettings,
+} from '@/lib/portfolio-theme-colors';
 import { portfolioSiteBasePath } from '@/lib/public-handle';
 
 interface Props {
@@ -57,12 +62,19 @@ export default async function PortfolioPreviewPage({ params }: Props) {
           </Link>
         </div>
       )}
-      <PortfolioPublicHome
-        portfolio={portfolio}
-        siteBasePath={siteBasePath}
-        displaySlug={displaySlug}
-        skipViewLog={!portfolio.isPublished}
-      />
+      <PortfolioPublicShell
+        accentColor={portfolio.accentColor}
+        themeColors={extractPortfolioThemeColors(
+          portfolio.themeSettings as PortfolioThemeSettings | null,
+        )}
+      >
+        <PortfolioPublicHome
+          portfolio={portfolio}
+          siteBasePath={siteBasePath}
+          displaySlug={displaySlug}
+          skipViewLog={!portfolio.isPublished}
+        />
+      </PortfolioPublicShell>
     </div>
   );
 }

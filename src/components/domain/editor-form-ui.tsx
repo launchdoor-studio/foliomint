@@ -13,7 +13,7 @@ export const editorMonoControlClass = cn(
   'min-w-0 w-full rounded-lg border-2 border-border bg-background px-3.5 py-3 font-mono text-sm leading-relaxed',
   'text-foreground placeholder:text-muted-foreground/70',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-  'dark:border-white/[0.14] dark:bg-[hsl(200_14%_10%)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]',
+  'dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.25)]',
 );
 
 /** Vertical stack inside repeat cards (roles, schools, projects, …). */
@@ -54,10 +54,9 @@ export function EditorFormPanel({
     <section
       className={cn(
         'rounded-xl border-2 border-border bg-card/40 p-6 shadow-sm sm:p-8',
-        'dark:border-white/[0.12] dark:bg-[hsl(200_14%_11%)] dark:shadow-none',
       )}
     >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-5 dark:border-white/10">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-5">
         <h2 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-foreground">{title}</h2>
         {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
       </div>
@@ -116,7 +115,7 @@ export function EditorSensitiveContactNotice() {
   return (
     <p
       id="editor-contact-privacy-notice"
-      className="rounded-lg border border-border/80 bg-muted/25 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground dark:border-white/10"
+      className="rounded-lg border border-border/80 bg-muted/25 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground"
     >
       We recommend adding an email.{' '}
       <span className="font-semibold text-foreground">Phone numbers are more sensitive:</span> anything
@@ -158,14 +157,14 @@ export function EditorSkillsField({
       <p className="font-mono text-[11px] leading-relaxed text-muted-foreground">
         Add skills one at a time. Each appears as a removable tag—no guessing after you fill the form.
       </p>
-      <div className="flex min-h-[2.75rem] flex-wrap gap-2.5 rounded-lg border-2 border-dashed border-border/80 bg-muted/20 p-3 dark:border-white/10 dark:bg-black/20">
+      <div className="flex min-h-[2.75rem] flex-wrap gap-2.5 rounded-lg border-2 border-dashed border-border/80 bg-muted/20 p-3">
         {skills.length === 0 ? (
           <span className="self-center font-mono text-xs text-muted-foreground">No skills yet.</span>
         ) : (
           skills.map((s, i) => (
             <span
               key={`skill-chip-${i}`}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 font-mono text-xs font-medium dark:border-white/12"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 font-mono text-xs font-medium"
             >
               {s}
               <button

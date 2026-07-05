@@ -5,76 +5,15 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EditorField, EditorFormPanel, editorRepeatBodyClass } from '@/components/domain/editor-form-ui';
-import { reconcilePortfolioGaps } from '@/lib/mint/portfolio-gap-reconciliation';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
+import { bulletsFromTextareaValue } from '@/lib/bullet-textarea';
 
 export function EditorStepMore(ctx: EditorStepContext) {
   const { updateContent, monoInput, monoTextarea, editorRepeatItemClass } = ctx;
   const content = ctx.state.content;
-  const suggestions = content?.portfolioSuggestions;
-  const gapStatus = content ? reconcilePortfolioGaps(content) : null;
-  const hasSuggestions = Boolean(
-    suggestions?.heroTagline ||
-      suggestions?.bioVariants?.length ||
-      (gapStatus && (gapStatus.openGaps.length > 0 || gapStatus.resolvedGaps.length > 0)) ||
-      suggestions?.recommendedSectionOrder?.length,
-  );
 
   return (
     <div className="space-y-6">
-      {hasSuggestions && (
-        <EditorFormPanel title="Mint portfolio suggestions">
-          <div className="space-y-5 font-mono text-sm">
-            {suggestions?.heroTagline && (
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Hero tagline
-                </p>
-                <p className="mt-2 rounded-lg border bg-muted/30 p-3">{suggestions.heroTagline}</p>
-              </div>
-            )}
-            {gapStatus && gapStatus.openGaps.length > 0 && (
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Add before publishing
-                </p>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                  {gapStatus.openGaps.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {gapStatus && gapStatus.resolvedGaps.length > 0 && (
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Already done
-                </p>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground/80">
-                  {gapStatus.resolvedGaps.map((item) => (
-                    <li key={item} className="line-through">{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {suggestions?.bioVariants && suggestions.bioVariants.length > 0 && (
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Bio options
-                </p>
-                <div className="mt-2 space-y-2">
-                  {suggestions.bioVariants.map((item) => (
-                    <p key={item} className="rounded-lg border bg-background p-3 text-muted-foreground">
-                      {item}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </EditorFormPanel>
-      )}
-
       <EditorFormPanel
         title="Awards"
         actions={
@@ -158,7 +97,7 @@ export function EditorStepMore(ctx: EditorStepContext) {
           <div className="space-y-8">
             {content.extracurricular.map((block, idx) => (
               <div key={`editor-extra-${idx}`} className={editorRepeatItemClass}>
-                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4 dark:border-white/10">
+                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4">
                   <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Block {idx + 1}
                   </span>
@@ -205,10 +144,7 @@ export function EditorStepMore(ctx: EditorStepContext) {
                             i === idx
                               ? {
                                   ...it,
-                                  bullets: e.target.value
-                                    .split('\n')
-                                    .map((v) => v.trim())
-                                    .filter(Boolean),
+                                  bullets: bulletsFromTextareaValue(e.target.value),
                                 }
                               : it,
                           ),
@@ -248,7 +184,7 @@ export function EditorStepMore(ctx: EditorStepContext) {
           <div className="space-y-8">
             {content.otherSections.map((block, idx) => (
               <div key={`editor-other-${idx}`} className={editorRepeatItemClass}>
-                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4 dark:border-white/10">
+                <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4">
                   <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Custom {idx + 1}
                   </span>
@@ -295,10 +231,7 @@ export function EditorStepMore(ctx: EditorStepContext) {
                             i === idx
                               ? {
                                   ...it,
-                                  bullets: e.target.value
-                                    .split('\n')
-                                    .map((v) => v.trim())
-                                    .filter(Boolean),
+                                  bullets: bulletsFromTextareaValue(e.target.value),
                                 }
                               : it,
                           ),

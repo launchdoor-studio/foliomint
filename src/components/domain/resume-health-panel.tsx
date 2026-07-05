@@ -42,7 +42,7 @@ export function ResumeHealthPanelContent({
       </ul>
 
       {suggestions?.heroTagline && (
-        <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 p-3 dark:border-white/10">
+        <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Suggested tagline
           </p>
@@ -109,13 +109,13 @@ export function ResumeHealthToolbarToggle({
       type="button"
       variant={open ? 'secondary' : 'outline'}
       size="sm"
-      className={cn('h-8 shrink-0 gap-1.5 px-2.5', className)}
+      className={cn('h-9 shrink-0 gap-1.5 px-2.5', className)}
       onClick={onToggle}
       aria-expanded={open}
       aria-controls="resume-health-panel"
       title={open ? 'Hide Mint resume health panel' : 'Show Mint resume health panel'}
     >
-      <MintAvatar pose="guide" size={18} />
+      <MintAvatar pose="guide" size={28} />
       <span className="hidden sm:inline">Resume health</span>
       <span className={cn('tabular-nums text-xs font-semibold', scoreTone(health.score))}>
         {health.score}
@@ -157,7 +157,7 @@ export function ResumeHealthDock({
       zIndexClass="z-[48]"
       header={
         <>
-          <MintAvatar pose="guide" size={36} />
+          <MintAvatar pose="guide" size={56} />
           <div className="min-w-0 flex-1">
             <p className="font-semibold leading-tight">Resume health</p>
             <p className={cn('text-xs tabular-nums', scoreTone(health.score))}>

@@ -12,6 +12,7 @@ import {
   editorRepeatBodyClass,
 } from '@/components/domain/editor-form-ui';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
+import { bulletsFromTextareaValue } from '@/lib/bullet-textarea';
 import { inferProjectLinkLabel, PROJECT_LINK_LABELS } from '@/lib/project-links';
 import type { ProjectLink } from '@/types';
 
@@ -58,7 +59,7 @@ export function EditorStepProjects(ctx: EditorStepContext) {
 
               return (
                 <div key={`editor-proj-${idx}`} className={editorRepeatItemClass}>
-                  <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4 dark:border-white/10">
+                  <div className="mb-5 flex items-center justify-between gap-2 border-b border-border/60 pb-4">
                     <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                       Project {idx + 1}
                     </span>
@@ -263,10 +264,7 @@ export function EditorStepProjects(ctx: EditorStepContext) {
                               i === idx
                                 ? {
                                     ...it,
-                                    bullets: e.target.value
-                                      .split('\n')
-                                      .map((v) => v.trim())
-                                      .filter(Boolean),
+                                    bullets: bulletsFromTextareaValue(e.target.value),
                                   }
                                 : it,
                             ),

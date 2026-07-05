@@ -14,6 +14,7 @@ export function serializeEditorPageState(s: EditorPageState): string {
     title: s.title,
     theme: s.theme,
     accentColor: s.accentColor,
+    themeColors: s.themeColors,
     isPublished: s.isPublished,
     content: s.content,
   });

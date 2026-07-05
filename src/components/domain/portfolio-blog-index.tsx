@@ -55,21 +55,21 @@ export async function PortfolioBlogIndex({
           <span className={portfolioSectionAccentClass(neu)} aria-hidden />
           <h1
             className={cn(
-              'text-[clamp(1.75rem,3vw+0.5rem,3rem)] font-semibold tracking-tight text-zinc-950 dark:text-zinc-50',
+              'text-[clamp(1.75rem,3vw+0.5rem,3rem)] font-semibold tracking-tight text-[var(--portfolio-fg)]',
               neu && 'uppercase tracking-wider',
             )}
           >
             Blog
           </h1>
         </div>
-        <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-lg">
+        <p className="mt-4 max-w-2xl text-pretty text-base leading-relaxed text-[var(--portfolio-fg-muted)] sm:text-lg">
           {portfolio.title}
         </p>
       </header>
 
       <ul className="mt-10 space-y-5 sm:mt-12">
         {posts.length === 0 ? (
-          <li className="text-sm text-zinc-600 dark:text-zinc-500">No posts yet.</li>
+          <li className="text-sm text-[var(--portfolio-fg-muted)]">No posts yet.</li>
         ) : (
           posts.map((p) => (
             <li key={p.slug}>
@@ -81,7 +81,7 @@ export async function PortfolioBlogIndex({
                   {p.title}
                 </h2>
                 {p.excerpt && (
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{p.excerpt}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">{p.excerpt}</p>
                 )}
                 {p.publishedAt && (
                   <p className={cn('mt-3', portfolioDateTextClass())}>

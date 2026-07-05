@@ -101,7 +101,7 @@ export function EditorWizardWorkspace({
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex flex-col gap-4 border-t border-border/60 pt-6 dark:border-white/10">
+          <div className="flex flex-col gap-4 border-t border-border/60 pt-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Button
                 type="button"

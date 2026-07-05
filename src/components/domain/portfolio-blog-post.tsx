@@ -42,14 +42,14 @@ export function PortfolioBlogPost({
           <p className={portfolioEyebrowClass(neu)}>Post</p>
           <h1
             className={cn(
-              'mt-3 text-[clamp(1.5rem,3vw+0.5rem,2.75rem)] font-semibold leading-tight tracking-tight text-zinc-950 dark:text-zinc-50',
+              'mt-3 text-[clamp(1.5rem,3vw+0.5rem,2.75rem)] font-semibold leading-tight tracking-tight text-[var(--portfolio-fg)]',
               neu && 'uppercase',
             )}
           >
             {post.title}
           </h1>
           {post.publishedAt && (
-            <p className="mt-4 text-sm font-medium tabular-nums text-zinc-600 dark:text-zinc-500">
+            <p className="mt-4 text-sm font-medium tabular-nums text-[var(--portfolio-fg-muted)]">
               {new Date(post.publishedAt).toLocaleDateString(undefined, {
                 dateStyle: 'long',
               })}

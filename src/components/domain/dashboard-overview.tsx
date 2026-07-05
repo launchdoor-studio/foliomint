@@ -52,7 +52,7 @@ interface DashboardOverviewProps {
 
 const portfolioActionButtonClass =
   'min-w-[5.5rem] border-border/80 bg-card shadow-[2px_2px_0_0_hsl(var(--primary))] ' +
-  'hover:bg-accent hover:text-accent-foreground dark:border-white/15 dark:bg-card ' +
+  'hover:bg-accent hover:text-accent-foreground ' +
   'dark:hover:bg-accent dark:hover:text-accent-foreground';
 
 function StatCard({
