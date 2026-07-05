@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import { sanitizeOutboundUrl } from '@/lib/safe-url';
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -24,10 +26,5 @@ export function absoluteUrl(path: string): string {
  * site-relative paths starting with `/` unchanged.
  */
 export function normalizeOutboundHref(raw: string): string {
-  const s = raw.trim();
-  if (!s) return s;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return s;
-  if (s.startsWith('//')) return `https:${s}`;
-  if (s.startsWith('/') || s.startsWith('#') || s.startsWith('?')) return s;
-  return `https://${s}`;
+  return sanitizeOutboundUrl(raw) ?? '';
 }

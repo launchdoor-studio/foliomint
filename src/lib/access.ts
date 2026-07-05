@@ -3,58 +3,18 @@ import { and, count, eq, gte } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { aiUsageEvents, users } from '@/lib/db/schema';
 import { isPaymentGatingBypassed } from '@/lib/feature-flags';
+import {
+  getTierLimits,
+  TIER_LIMITS,
+  type PlanTier,
+  type TierLimits,
+} from '@/lib/tier-limits';
 
-export type PlanTier = 'free' | 'pro';
+export type { PlanTier, TierLimits } from '@/lib/tier-limits';
+export { getTierLimits, TIER_LIMITS } from '@/lib/tier-limits';
+
 export type SubscriptionStatus = 'free' | 'active' | 'trialing' | 'past_due' | 'cancelled' | 'expired';
 export type AiUsageKind = 'parse' | 'rewrite' | 'suggestion' | 'mint_chat' | 'export';
-
-export interface TierLimits {
-  maxPublishedPortfolios: number;
-  /** Pro/trial: parses allowed per rolling 24h */
-  maxAiParsesPerDay: number;
-  /** Free: parses allowed per rolling 30 days */
-  maxAiParsesPerMonth: number;
-  maxAiRewritesPerMonth: number;
-  maxMintMessagesPerDay: number;
-  maxResumeExportsPerMonth: number;
-  themes: Array<'classic' | 'neubrutalism' | 'editorial' | 'minimal' | 'terminal'>;
-  includeFooter: boolean;
-  blog: boolean;
-  customDomain: boolean;
-  advancedAnalytics: boolean;
-  portfolioThemeCustomization: 'basic' | 'advanced';
-}
-
-export const TIER_LIMITS: Record<PlanTier, TierLimits> = {
-  free: {
-    maxPublishedPortfolios: 1,
-    maxAiParsesPerDay: 0,
-    maxAiParsesPerMonth: 3,
-    maxAiRewritesPerMonth: 3,
-    maxMintMessagesPerDay: 10,
-    maxResumeExportsPerMonth: 1,
-    themes: ['classic', 'minimal', 'neubrutalism'],
-    includeFooter: true,
-    blog: false,
-    customDomain: false,
-    advancedAnalytics: false,
-    portfolioThemeCustomization: 'basic',
-  },
-  pro: {
-    maxPublishedPortfolios: Number.POSITIVE_INFINITY,
-    maxAiParsesPerDay: 20,
-    maxAiParsesPerMonth: Number.POSITIVE_INFINITY,
-    maxAiRewritesPerMonth: 100,
-    maxMintMessagesPerDay: 50,
-    maxResumeExportsPerMonth: Number.POSITIVE_INFINITY,
-    themes: ['classic', 'neubrutalism', 'editorial', 'minimal', 'terminal'],
-    includeFooter: false,
-    blog: true,
-    customDomain: true,
-    advancedAnalytics: true,
-    portfolioThemeCustomization: 'advanced',
-  },
-};
 
 const PAST_DUE_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -102,10 +62,6 @@ export async function getUserTier(userId: string): Promise<PlanTier> {
 
 export async function userHasProAccess(userId: string): Promise<boolean> {
   return (await getUserTier(userId)) === 'pro';
-}
-
-export function getTierLimits(tier: PlanTier): TierLimits {
-  return TIER_LIMITS[tier];
 }
 
 export async function getAiUsageCountSince(userId: string, kind: AiUsageKind, since: Date): Promise<number> {

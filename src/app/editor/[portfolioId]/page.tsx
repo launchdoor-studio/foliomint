@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { toastAfterPortfolioSave } from '@/lib/editor-save-toast';
 import { buildPortfolioSavePayload } from '@/lib/editor-save-payload';
 import { serializeEditorPageState } from '@/lib/editor-state-snapshot';
-import { ACTIVE_PORTFOLIO_THEME } from '@/lib/portfolio-profile-links';
+import { DEFAULT_PORTFOLIO_THEME } from '@/lib/portfolio-profile-links';
 import { integrationToSocialLink } from '@/lib/social-links';
 import type { SocialLink } from '@/lib/social-links';
 
@@ -40,7 +40,11 @@ import { cn } from '@/lib/utils';
 import type { EditorPageState } from '@/types/editor-page';
 import type { PortfolioContent } from '@/types';
 
-const PORTFOLIO_THEME_LABEL = 'Neubrutalism';
+import type { PortfolioTheme } from '@/types';
+
+function portfolioThemeLabel(theme: string): string {
+  return theme === 'neubrutalism' ? 'Neubrutalism' : 'Classic';
+}
 
 export default function EditorPage() {
   const params = useParams<{ portfolioId: string }>();
@@ -82,20 +86,12 @@ export default function EditorPage() {
           slug: data.slug,
           publicHandle: data.publicHandle ?? null,
           title: data.title,
-          theme: ACTIVE_PORTFOLIO_THEME,
+          theme: (data.theme as PortfolioTheme) ?? DEFAULT_PORTFOLIO_THEME,
           accentColor: data.accentColor ?? null,
           themeColors: data.themeColors ?? EMPTY_PORTFOLIO_THEME_COLORS,
           isPublished: data.isPublished,
           content: data.content,
         };
-        if (data.theme !== ACTIVE_PORTFOLIO_THEME) {
-          void fetch(`/api/portfolios/${id}`, {
-            method: 'PATCH',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ theme: ACTIVE_PORTFOLIO_THEME }),
-          });
-        }
         setState(loaded);
         saveBaselineRef.current = serializeEditorPageState(loaded);
         const me = await fetch('/api/me', { credentials: 'include' }).then(
@@ -161,7 +157,7 @@ export default function EditorPage() {
     const prevPublished = state.isPublished;
     setSaving(true);
     try {
-      const next = { ...state, ...updates, theme: ACTIVE_PORTFOLIO_THEME };
+      const next = { ...state, ...updates };
       const res = await fetch(`/api/portfolios/${state.id}`, {
         method: 'PATCH',
         credentials: 'include',
@@ -285,7 +281,7 @@ export default function EditorPage() {
       preview={
         <EditorLivePreviewPanel
           stepKey={wizardStep}
-          themeLabel={PORTFOLIO_THEME_LABEL}
+          themeLabel={portfolioThemeLabel(state.theme)}
           cardClassName={previewCardClass}
           titleClassName={editorCardTitleClass}
         >
@@ -293,7 +289,7 @@ export default function EditorPage() {
             content={content}
             slug={state.slug}
             publicHandle={state.publicHandle}
-            theme={ACTIVE_PORTFOLIO_THEME}
+            theme={state.theme}
             accentColor={state.accentColor}
             themeColors={state.themeColors}
             isPublished={state.isPublished}
@@ -353,7 +349,7 @@ export default function EditorPage() {
                 {saving ? 'Saving…' : isDirty ? 'Unsaved changes' : 'Saved'}
               </span>
               <span className="hidden rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:inline">
-                {PORTFOLIO_THEME_LABEL}
+                {portfolioThemeLabel(state.theme)}
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">

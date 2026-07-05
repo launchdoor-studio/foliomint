@@ -38,6 +38,37 @@ See [LICENSE](./LICENSE) for details.
 
 See [SECURITY.md](./SECURITY.md) for how to report vulnerabilities responsibly.
 
+## Run locally (new machine)
+
+Clone the repo and install dependencies:
+
+```bash
+git clone https://github.com/launchdoor-studio/foliomint.git
+cd foliomint
+nvm use
+mkdir -p data
+npm install
+```
+
+Create your environment file. Copy `.env.example` to `.env.local`, then add any secrets you use (for example `GROQ_API_KEY`). `.env.local` is gitignored and must be copied or recreated on each machine.
+
+```bash
+cp .env.example .env.local
+```
+
+With `LOCAL_DEV_MODE=true` (the default in `.env.example`), you can develop without OAuth or billing setup. AI features use dev stubs when `GROQ_API_KEY` is empty.
+
+Push the database schema and start the app:
+
+```bash
+npm run db:push
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000), then try `/generate` or `/dashboard`.
+
+Other useful commands: `npm test`, `npm run lint`, `npm run build`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for stack details and project structure.
+
 ---
 
-<p align="center">Want to run or extend FolioMint locally? See <a href="./CONTRIBUTING.md">CONTRIBUTING.md</a>. Product spec: <a href="./SPEC.md">SPEC.md</a>.</p>
+<p align="center">Product spec: <a href="./SPEC.md">SPEC.md</a> · Task list: <a href="./TODO.md">TODO.md</a></p>

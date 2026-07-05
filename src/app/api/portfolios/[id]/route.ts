@@ -17,6 +17,7 @@ import {
   type PortfolioThemeColors,
   type PortfolioThemeSettings,
 } from '@/lib/portfolio-theme-colors';
+import { parseAndSanitizePortfolioContent } from '@/lib/portfolio-content-sanitize';
 import type { PortfolioContent, PortfolioTheme } from '@/types';
 
 interface RouteContext {
@@ -187,7 +188,11 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   }
 
   if (body.content !== undefined) {
-    set.content = body.content as unknown as Record<string, unknown>;
+    const contentResult = parseAndSanitizePortfolioContent(body.content);
+    if (!contentResult.ok) {
+      return NextResponse.json({ error: contentResult.error }, { status: 400 });
+    }
+    set.content = contentResult.content as unknown as Record<string, unknown>;
   }
 
   if (body.customDomain !== undefined) {

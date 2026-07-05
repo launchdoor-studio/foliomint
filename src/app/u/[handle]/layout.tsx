@@ -20,7 +20,11 @@ export default async function PublicPortfolioHandleLayout({
   const normalized = normalizePublicHandleInput(params.handle);
   const row = normalized
     ? await db
-        .select({ accentColor: portfolios.accentColor, themeSettings: portfolios.themeSettings })
+        .select({
+          accentColor: portfolios.accentColor,
+          themeSettings: portfolios.themeSettings,
+          theme: portfolios.theme,
+        })
         .from(portfolios)
         .where(eq(portfolios.publicHandle, normalized))
         .get()
@@ -30,6 +34,7 @@ export default async function PublicPortfolioHandleLayout({
     <PortfolioPublicShell
       accentColor={row?.accentColor ?? null}
       themeColors={extractPortfolioThemeColors(row?.themeSettings as PortfolioThemeSettings | null)}
+      theme={row?.theme ?? 'neubrutalism'}
     >
       {children}
     </PortfolioPublicShell>

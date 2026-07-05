@@ -1,3 +1,14 @@
+import {
+  portfolioClassicCardClass,
+  portfolioClassicChipClass,
+  portfolioClassicEyebrowClass,
+  portfolioClassicIconButtonClass,
+  portfolioClassicNavLinkClass,
+  portfolioClassicPrimaryPillClass,
+  portfolioClassicSecondaryPillClass,
+  portfolioClassicSectionTitleClass,
+  portfolioClassicTextLinkClass,
+} from '@/lib/portfolio-classic-ui';
 import { cn } from '@/lib/utils';
 
 /** Inner page wrapper: follows shell theme (light / dark). */
@@ -27,19 +38,14 @@ export function portfolioNavPillClass(neu: boolean): string {
         'shadow-[4px_4px_0_0_var(--portfolio-shadow)]',
         'transition-transform hover:translate-x-px hover:translate-y-px',
       )
-    : cn(
-        'inline-flex items-center justify-center border border-[var(--portfolio-border)]',
-        'bg-[var(--portfolio-surface-elevated)] px-5 py-2 text-sm font-semibold text-[var(--portfolio-fg)]',
-        'no-underline transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
-      );
+    : portfolioClassicNavLinkClass();
 }
 
 /** Eyebrow label (Portfolio, Writing, …). */
 export function portfolioEyebrowClass(neu: boolean): string {
-  return cn(
-    'text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--portfolio-accent)]',
-    neu && 'tracking-[0.22em]',
-  );
+  return neu
+    ? cn('text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--portfolio-accent)]')
+    : portfolioClassicEyebrowClass();
 }
 
 /** Divider under hero / page intro (portfolio hero + blog headers). */
@@ -49,10 +55,11 @@ export function portfolioHeaderRuleClass(neu: boolean): string {
 
 /** Section titles (Skills, Experience, …). */
 export function portfolioSectionTitleRowClass(neu: boolean): string {
-  return cn(
-    'mb-8 flex items-center gap-3 text-[1.35rem] font-semibold tracking-tight text-[var(--portfolio-fg)] sm:text-2xl',
-    neu && 'uppercase tracking-[0.12em]',
-  );
+  return neu
+    ? cn(
+        'mb-8 flex items-center gap-3 text-[1.35rem] font-semibold uppercase tracking-[0.12em] text-[var(--portfolio-fg)] sm:text-2xl',
+      )
+    : cn('mb-8 flex items-center gap-3', portfolioClassicSectionTitleClass());
 }
 
 export function portfolioSectionAccentClass(neu: boolean): string {
@@ -61,7 +68,7 @@ export function portfolioSectionAccentClass(neu: boolean): string {
         'block h-4 w-4 shrink-0 rounded-none border-4 border-[var(--portfolio-fg)] bg-[var(--portfolio-accent)]',
         'shadow-[4px_4px_0_0_var(--portfolio-shadow)]',
       )
-    : 'block h-9 w-1 shrink-0 bg-[var(--portfolio-accent)]';
+    : 'hidden';
 }
 
 /** Primary content cards (experience, education, projects, awards, blog list items). */
@@ -71,12 +78,7 @@ export function portfolioCardClass(neu: boolean): string {
         'rounded-none border-4 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)]/95',
         'shadow-[6px_6px_0_0_var(--portfolio-shadow)]',
       )
-    : cn(
-        'border border-[var(--portfolio-border)] bg-[var(--portfolio-surface-elevated)]/90',
-        'transition-[transform,box-shadow,border-color] duration-300',
-        'hover:-translate-y-0.5 hover:border-[var(--portfolio-accent)] hover:shadow-md',
-        'hover:border-[var(--portfolio-accent)]',
-      );
+    : portfolioClassicCardClass();
 }
 
 export const PORTFOLIO_CARD_PAD = 'p-6 sm:p-7';
@@ -88,10 +90,7 @@ export function portfolioSkillChipClass(neu: boolean): string {
         'rounded-none border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)] px-2 py-0.5',
         'text-xs font-bold leading-none text-[var(--portfolio-fg)] shadow-[3px_3px_0_0_var(--portfolio-shadow)]',
       )
-    : cn(
-        'border border-[var(--portfolio-border)] bg-[var(--portfolio-surface)] px-2.5 py-1',
-        'text-xs font-medium leading-none text-[var(--portfolio-fg-muted)]',
-      );
+    : portfolioClassicChipClass();
 }
 
 /** External text links inside cards (e.g. Open project). */
@@ -102,7 +101,7 @@ export function portfolioInlineLinkClass(neu: boolean): string {
         'text-xs font-bold text-[var(--portfolio-fg)] shadow-[3px_3px_0_0_var(--portfolio-shadow)] no-underline',
         'transition-transform hover:translate-x-px hover:translate-y-px',
       )
-    : 'text-xs font-semibold text-[var(--portfolio-accent)] underline-offset-4 hover:underline';
+    : portfolioClassicTextLinkClass();
 }
 
 /** Icon-only social / profile link buttons in the hero. */
@@ -114,12 +113,7 @@ export function portfolioOutboundIconButtonClass(neu: boolean): string {
         'no-underline transition-transform hover:translate-x-px hover:translate-y-px',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portfolio-fg)] focus-visible:ring-offset-2',
       )
-    : cn(
-        'inline-flex h-9 w-9 items-center justify-center border border-[var(--portfolio-border)]',
-        'bg-[var(--portfolio-surface-elevated)] text-[var(--portfolio-fg-muted)] no-underline transition-colors',
-        'hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portfolio-accent)] focus-visible:ring-offset-2',
-      );
+    : portfolioClassicIconButtonClass();
 }
 
 /** Social / outbound link chips (same family as nav pill, slightly tighter). */
@@ -130,11 +124,7 @@ export function portfolioOutboundChipClass(neu: boolean): string {
         'bg-[var(--portfolio-surface-elevated)] px-4 py-2 text-sm font-bold text-[var(--portfolio-fg)]',
         'shadow-[4px_4px_0_0_var(--portfolio-shadow)] no-underline transition-transform hover:translate-x-px hover:translate-y-px',
       )
-    : cn(
-        'inline-flex items-center justify-center border border-[var(--portfolio-border)]',
-        'bg-[var(--portfolio-surface-elevated)] px-4 py-2 text-sm font-semibold text-[var(--portfolio-fg)]',
-        'no-underline transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)]',
-      );
+    : portfolioClassicSecondaryPillClass();
 }
 
 export function portfolioDateTextClass(): string {
@@ -148,6 +138,7 @@ export function portfolioDateBadgeClass(neu: boolean): string {
       cn(
         'border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-surface-elevated)] px-2 py-1 font-bold text-[var(--portfolio-fg)]',
       ),
+    !neu && 'font-mono text-[11px]',
   );
 }
 
@@ -164,7 +155,7 @@ export function portfolioBulletDotClass(neu: boolean): string {
     ? cn(
         'mt-2.5 h-2 w-2 shrink-0 rounded-none border-2 border-[var(--portfolio-fg)] bg-[var(--portfolio-accent)]',
       )
-    : 'mt-2 h-1.5 w-1.5 shrink-0 bg-[var(--portfolio-fg-muted)]';
+    : 'mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]';
 }
 
 export function portfolioFooterRuleClass(neu: boolean): string {

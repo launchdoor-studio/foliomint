@@ -75,22 +75,31 @@ export function buildResumeContactLinks(input: {
     items.push({ label: email, href: `mailto:${email}` });
   }
   if (input.website?.trim()) {
-    items.push({
-      label: formatWebsiteLabel(input.website),
-      href: resolveWebsiteHref(input.website),
-    });
+    const href = resolveWebsiteHref(input.website);
+    if (href) {
+      items.push({
+        label: formatWebsiteLabel(input.website),
+        href,
+      });
+    }
   }
   if (input.github?.trim()) {
-    items.push({
-      label: formatGithubLabel(input.github),
-      href: resolveGithubHref(input.github),
-    });
+    const href = resolveGithubHref(input.github);
+    if (href) {
+      items.push({
+        label: formatGithubLabel(input.github),
+        href,
+      });
+    }
   }
   if (input.linkedin?.trim()) {
-    items.push({
-      label: formatLinkedInLabel(input.linkedin),
-      href: resolveLinkedInHref(input.linkedin),
-    });
+    const href = resolveLinkedInHref(input.linkedin);
+    if (href) {
+      items.push({
+        label: formatLinkedInLabel(input.linkedin),
+        href,
+      });
+    }
   }
   if (input.phone?.trim()) {
     const phone = input.phone.trim();

@@ -1,3 +1,5 @@
+import { sanitizeOutboundUrl } from '@/lib/safe-url';
+
 export interface SocialLink {
   label: string;
   href: string;
@@ -24,7 +26,9 @@ export function integrationToSocialLink(
   const d = data ?? {};
   const explicit = typeof d.url === 'string' ? d.url.trim() : '';
   if (explicit) {
-    return { label: PLATFORM_LABEL[platform] ?? capitalize(platform), href: explicit };
+    const href = sanitizeOutboundUrl(explicit);
+    if (!href) return null;
+    return { label: PLATFORM_LABEL[platform] ?? capitalize(platform), href };
   }
   if (!username?.trim()) return null;
   const u = username.trim();
@@ -42,7 +46,9 @@ export function integrationToSocialLink(
   };
   const href = hrefByPlatform[platform];
   if (!href) return null;
-  return { label: PLATFORM_LABEL[platform] ?? capitalize(platform), href };
+  const safeHref = sanitizeOutboundUrl(href);
+  if (!safeHref) return null;
+  return { label: PLATFORM_LABEL[platform] ?? capitalize(platform), href: safeHref };
 }
 
 function capitalize(s: string): string {

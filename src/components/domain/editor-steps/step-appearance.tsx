@@ -4,13 +4,29 @@ import { Input } from '@/components/ui/input';
 import { EditorField, EditorFormPanel } from '@/components/domain/editor-form-ui';
 import type { EditorStepContext } from '@/components/domain/editor-step-context';
 import { PortfolioThemeColorsPanel } from '@/components/domain/portfolio-theme-colors-panel';
+import { PortfolioThemePicker } from '@/components/domain/portfolio-theme-picker';
 import { normalizePortfolioAccent } from '@/lib/portfolio-accent';
 
 export function EditorStepAppearance(ctx: EditorStepContext) {
-  const { state, setState, handleSave, saving, monoInput } = ctx;
+  const { state, setState, handleSave, saving, monoInput, tier } = ctx;
 
   return (
     <div className="space-y-6">
+      <EditorFormPanel title="Portfolio style">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Choose how your published site looks to visitors. Switch anytime — your content stays the same.
+        </p>
+        <PortfolioThemePicker
+          value={state.theme}
+          tier={tier}
+          saving={saving}
+          onSelect={(theme) => {
+            setState((prev) => (prev ? { ...prev, theme } : prev));
+            void handleSave({ theme });
+          }}
+        />
+      </EditorFormPanel>
+
       <EditorFormPanel title="Accent & canvas">
         <p className="text-sm leading-relaxed text-muted-foreground">
           These colors apply to your published portfolio. Accent drives links, chips, and highlights.

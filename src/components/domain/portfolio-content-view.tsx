@@ -6,6 +6,7 @@ import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profi
 import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
 import { PortfolioPublicFooter } from '@/components/domain/portfolio-public-footer';
+import { sanitizeImageUrl } from '@/lib/safe-url';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
 import { visibleBullets, hasVisibleBullets } from '@/lib/bullet-textarea';
 import {
@@ -109,6 +110,7 @@ export function PortfolioContentView({
 }: PortfolioContentViewProps) {
   const neu = theme === 'neubrutalism';
   const profileLinks = buildPortfolioProfileLinks(content, socialLinks);
+  const profileImageUrl = sanitizeImageUrl(content.profileImageUrl);
 
   const card = portfolioCardClass(neu);
   const pad = PORTFOLIO_CARD_PAD;
@@ -141,10 +143,10 @@ export function PortfolioContentView({
         <header className={portfolioHeaderRuleClass(neu)}>
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:gap-10 lg:gap-14">
             <div className="shrink-0 sm:pt-1">
-              {content.profileImageUrl ? (
+              {profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={content.profileImageUrl}
+                  src={profileImageUrl}
                   alt={content.name}
                   className="h-24 w-24 rounded-none border-4 border-[var(--portfolio-fg)] object-cover shadow-[6px_6px_0_0_rgb(24_24_27)] dark:border-[var(--portfolio-border)] dark:shadow-[6px_6px_0_0_rgb(228_228_231)] sm:h-28 sm:w-28 sm:shadow-[8px_8px_0_0_rgb(24_24_27)] md:h-32 md:w-32 sm:shadow-[8px_8px_0_0_var(--portfolio-shadow)]"
                 />

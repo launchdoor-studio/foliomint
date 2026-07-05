@@ -98,6 +98,19 @@ export const resumeDataSchema = z.object({
 });
 
 export type ResumeData = z.infer<typeof resumeDataSchema>;
+
+export const portfolioContentSchema = resumeDataSchema.extend({
+  customSections: z
+    .array(
+      z.object({
+        title: z.string(),
+        content: z.string(),
+      }),
+    )
+    .optional(),
+});
+
+export type PortfolioContent = z.infer<typeof portfolioContentSchema>;
 export type Experience = z.infer<typeof experienceSchema>;
 export type Education = z.infer<typeof educationSchema>;
 export type ProjectLink = z.infer<typeof projectLinkSchema>;
@@ -113,9 +126,3 @@ export interface UserPreferences {
   theme: ThemePreference;
 }
 
-export interface PortfolioContent extends ResumeData {
-  customSections?: Array<{
-    title: string;
-    content: string;
-  }>;
-}

@@ -18,10 +18,10 @@ export type ResolvedPortfolioThemeColors = {
 };
 
 export const DEFAULT_PORTFOLIO_THEME_COLORS: ResolvedPortfolioThemeColors = {
-  lightBackground: '#fafafa',
-  lightForeground: '#18181b',
-  darkBackground: '#09090b',
-  darkForeground: '#e4e4e7',
+  lightBackground: '#ffffff',
+  lightForeground: '#171717',
+  darkBackground: '#0a0a0a',
+  darkForeground: '#ededed',
 };
 
 export const EMPTY_PORTFOLIO_THEME_COLORS: PortfolioThemeColors = {

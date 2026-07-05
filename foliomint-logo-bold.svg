@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FolioMint logo icon">
+  <defs>
+    <filter id="hardShadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="18" dy="18" stdDeviation="0" flood-color="#0B211B" flood-opacity="1"/>
+    </filter>
+  </defs>
+
+  <!-- Neo-brutal open folio/book mark -->
+  <g filter="url(#hardShadow)" stroke="#0B211B" stroke-width="22" stroke-linejoin="round" stroke-linecap="round">
+    <!-- left cover -->
+    <path d="M62 152L226 224V402L62 330V152Z" fill="#9FE7BC"/>
+    <!-- right cover -->
+    <path d="M450 152L286 224V402L450 330V152Z" fill="#CFF6DC"/>
+    <!-- middle fold -->
+    <path d="M226 224L256 246L286 224V402L256 430L226 402V224Z" fill="#F7F0DE"/>
+    <!-- left inner page -->
+    <path d="M92 98L226 158V224L92 166V98Z" fill="#F7F0DE"/>
+    <!-- right inner page -->
+    <path d="M420 98L286 158V224L420 166V98Z" fill="#F7F0DE"/>
+    <!-- mint leaf -->
+    <path d="M331 88C371 26 440 45 451 47C444 111 398 140 342 132C346 112 357 94 384 72C364 77 345 82 331 88Z" fill="#6ED99A"/>
+    <path d="M342 132C363 101 391 76 451 47" fill="none"/>
+  </g>
+</svg>

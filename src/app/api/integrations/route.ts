@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { integrations } from '@/lib/db/schema';
+import { isSafeHttpUrl } from '@/lib/safe-url';
 import { INTEGRATION_PLATFORMS } from '@/lib/social-links';
 import { userHasProAccess } from '@/lib/pro-access';
 
@@ -15,7 +16,11 @@ const bodySchema = z.object({
     .string()
     .refine((p) => (INTEGRATION_PLATFORMS as readonly string[]).includes(p), 'Invalid platform'),
   username: z.string().optional(),
-  url: z.string().url().optional().or(z.literal('')),
+  url: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .refine((value) => !value || isSafeHttpUrl(value), 'URL must use http or https'),
 });
 
 export async function GET() {

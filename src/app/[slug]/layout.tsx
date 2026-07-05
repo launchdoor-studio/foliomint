@@ -17,7 +17,11 @@ export default async function PublicPortfolioSlugLayout({
   params: { slug: string };
 }) {
   const row = await db
-    .select({ accentColor: portfolios.accentColor, themeSettings: portfolios.themeSettings })
+    .select({
+      accentColor: portfolios.accentColor,
+      themeSettings: portfolios.themeSettings,
+      theme: portfolios.theme,
+    })
     .from(portfolios)
     .where(eq(portfolios.slug, params.slug))
     .get();
@@ -26,6 +30,7 @@ export default async function PublicPortfolioSlugLayout({
     <PortfolioPublicShell
       accentColor={row?.accentColor ?? null}
       themeColors={extractPortfolioThemeColors(row?.themeSettings as PortfolioThemeSettings | null)}
+      theme={row?.theme ?? 'neubrutalism'}
     >
       {children}
     </PortfolioPublicShell>

@@ -1,12 +1,34 @@
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { ArrowUpRight, MapPin } from 'lucide-react';
 
 import { PortfolioPublicFooter } from '@/components/domain/portfolio-public-footer';
 import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
-import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicThemeToggle } from '@/components/domain/portfolio-public-theme-toggle';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
+import { getProjectLinks } from '@/lib/project-links';
 import { visibleBullets, hasVisibleBullets } from '@/lib/bullet-textarea';
+import {
+  portfolioClassicAvatarClass,
+  portfolioClassicBodyClass,
+  portfolioClassicBodyFontStyle,
+  portfolioClassicBrandClass,
+  portfolioClassicBulletClass,
+  portfolioClassicBulletDotClass,
+  portfolioClassicCalloutClass,
+  portfolioClassicCardClass,
+  portfolioClassicCardTitleClass,
+  portfolioClassicHeaderClass,
+  portfolioClassicHeroNameClass,
+  portfolioClassicHeroSubtitleClass,
+  portfolioClassicListPrimaryClass,
+  portfolioClassicListSecondaryClass,
+  portfolioClassicNavLinkClass,
+  portfolioClassicPageWrapClass,
+  portfolioClassicSectionDescClass,
+  portfolioClassicSectionHeadingClass,
+  portfolioClassicTagClass,
+  portfolioClassicTextLinkClass,
+} from '@/lib/portfolio-classic-ui';
 import type { SocialLink } from '@/lib/social-links';
 import { cn, normalizeOutboundHref } from '@/lib/utils';
 import type { PortfolioContent } from '@/types';
@@ -43,11 +65,72 @@ function splitBioParagraphs(bio?: string | null): string[] {
     .filter(Boolean);
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function ClassicSection({
+  id,
+  title,
+  description,
+  children,
+  className,
+}: {
+  id?: string;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <h2 className="mb-6 border-b border-[var(--portfolio-border)] pb-2 text-lg font-bold tracking-tight text-zinc-900 dark:border-zinc-700 dark:text-zinc-100 sm:text-xl">
-      {children}
-    </h2>
+    <section id={id} className={cn('mb-14 scroll-mt-24 sm:mb-16', className)}>
+      <h2 className={portfolioClassicSectionHeadingClass()}>{title}</h2>
+      {description ? <p className={portfolioClassicSectionDescClass()}>{description}</p> : null}
+      <div className="mt-6">{children}</div>
+    </section>
+  );
+}
+
+function ClassicListItem({ text }: { text: string }) {
+  const trimmed = text.trim();
+  const parenMatch = trimmed.match(/^(.+?)\s*(\([^)]+\))\s*$/);
+
+  if (parenMatch) {
+    return (
+      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <span className={portfolioClassicListPrimaryClass()}>{parenMatch[1].trim()}</span>
+        <span className={portfolioClassicListSecondaryClass()}>{parenMatch[2]}</span>
+      </p>
+    );
+  }
+
+  return <p className={portfolioClassicListSecondaryClass()}>{trimmed}</p>;
+}
+
+function ClassicListCard({ items }: { items: string[] }) {
+  const visible = items.map((s) => s.trim()).filter(Boolean);
+  if (visible.length === 0) return null;
+
+  return (
+    <div className={cn(portfolioClassicCardClass(), 'gap-3.5')}>
+      {visible.map((item, i) => (
+        <ClassicListItem key={`${item}-${i}`} text={item} />
+      ))}
+    </div>
+  );
+}
+
+function ClassicListSection({
+  id,
+  title,
+  description,
+  items,
+}: {
+  id?: string;
+  title: string;
+  description?: string;
+  items: string[];
+}) {
+  return (
+    <ClassicSection id={id} title={title} description={description}>
+      <ClassicListCard items={items} />
+    </ClassicSection>
   );
 }
 
@@ -57,10 +140,6 @@ interface PortfolioClassicMonoViewProps {
   siteBasePath: string;
   showBlogLink?: boolean;
   socialLinks?: SocialLink[];
-  /**
-   * Editor / narrow embed: avoid viewport `md:`/`sm:` side-by-side layouts that break when the
-   * preview panel is only ~400–600px wide while the window is large.
-   */
   narrowLayout?: boolean;
 }
 
@@ -77,185 +156,165 @@ export function PortfolioClassicMonoView({
   const profileLinks = buildPortfolioProfileLinks(content, socialLinks);
   const displayName = content.name?.trim() || slug;
   const initial = displayName.charAt(0).toUpperCase() || '?';
+  const brandLabel = displayName.split(/\s+/)[0] || displayName;
+
   const navItems = [
-    bioParagraphs.length > 0 ? { label: 'About', href: '#about' } : null,
-    sortedExperience.length ? { label: 'Experience', href: '#experience' } : null,
-    content.education?.length ? { label: 'Education', href: '#education' } : null,
     content.projects?.length ? { label: 'Projects', href: '#projects' } : null,
-    content.skills?.length ? { label: 'Skills', href: '#skills' } : null,
+    sortedExperience.length ? { label: 'Experience', href: '#experience' } : null,
     showBlogLink ? { label: 'Blog', href: `${siteBasePath}/blog` } : null,
   ].filter((item): item is { label: string; href: string } => item !== null);
-  const mobileBlogItem = navItems.find((item) => item.label === 'Blog');
 
-  const skillsEyebrow = content.skills?.length
-    ? content.skills.slice(0, 6).join(' · ')
-    : null;
+  const avatarSize = narrowLayout ? 'sm' : 'md';
 
   return (
-    <div className="min-h-full antialiased text-[var(--portfolio-fg)]">
-      <div
-        className={cn(
-          'mx-auto max-w-2xl px-5 pb-20 sm:px-8 lg:max-w-3xl',
-          narrowLayout ? 'pt-4 pb-12' : 'pt-8 lg:pt-12',
-        )}
-      >
-        <header
-          className={cn(
-            'mb-10 flex border-b border-[var(--portfolio-border)] pb-6 dark:border-zinc-700',
-            narrowLayout
-              ? 'flex-col gap-4'
-              : 'flex-row items-center justify-between gap-3 sm:gap-4',
-          )}
-        >
-          <span
-            className={cn(
-              'min-w-0 text-sm font-bold text-[var(--portfolio-fg)]',
-              narrowLayout ? 'break-words' : 'min-w-0 flex-1 truncate pr-2',
-            )}
-          >
-            {displayName}
-          </span>
-          <div className="flex min-w-0 shrink-0 flex-nowrap items-center justify-end gap-x-3 sm:gap-x-4 md:gap-x-5">
-            {mobileBlogItem ? (
-              <Link
-                href={mobileBlogItem.href}
-                className="box-border inline-flex h-10 max-h-10 min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-none border border-[var(--portfolio-border)] bg-white px-3 text-[11px] font-semibold uppercase leading-none tracking-[0.08em] text-zinc-600 !shadow-none transition-colors hover:border-[var(--portfolio-accent)] hover:text-[var(--portfolio-accent)] dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 sm:hidden"
-              >
-                {mobileBlogItem.label}
-              </Link>
+    <div
+      className="portfolio-surface min-h-full antialiased text-[var(--portfolio-fg)]"
+      style={portfolioClassicBodyFontStyle()}
+    >
+      <div className={portfolioClassicPageWrapClass(narrowLayout)}>
+        {/* Header */}
+        <header className={portfolioClassicHeaderClass()}>
+          <span className={portfolioClassicBrandClass()}>{brandLabel}</span>
+          <div className="flex shrink-0 items-center gap-4 sm:gap-5">
+            {!narrowLayout ? (
+              <nav className="flex items-center gap-4 sm:gap-5">
+                {navItems.map((item) =>
+                  item.href.startsWith('/') ? (
+                    <Link key={item.label} href={item.href} className={portfolioClassicNavLinkClass()}>
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a key={item.label} href={item.href} className={portfolioClassicNavLinkClass()}>
+                      {item.label}
+                    </a>
+                  ),
+                )}
+              </nav>
             ) : null}
-
-            <nav className="hidden max-w-full flex-wrap items-center justify-end gap-x-3 gap-y-2 text-[var(--portfolio-fg-muted)] sm:flex sm:gap-x-4 md:gap-x-5 lg:gap-x-4 xl:gap-x-5">
-              {navItems.map((item) =>
-                item.href.startsWith('/') ? (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="text-[10px] font-bold uppercase tracking-[0.14em] transition-colors hover:text-[var(--portfolio-accent)] md:tracking-[0.18em] lg:tracking-[0.2em]"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="text-[10px] font-bold uppercase tracking-[0.14em] transition-colors hover:text-[var(--portfolio-accent)] md:tracking-[0.18em] lg:tracking-[0.2em]"
-                  >
-                    {item.label}
-                  </a>
-                ),
-              )}
-            </nav>
-
             <PortfolioPublicThemeToggle variant="classic" />
           </div>
         </header>
 
-        <section
-          className={cn(
-            'mb-14 border-b border-[var(--portfolio-border)] pb-12 dark:border-zinc-700 sm:mb-16 sm:pb-14',
-            narrowLayout
-              ? 'flex flex-col gap-6'
-              : 'flex flex-col gap-8 sm:flex-row-reverse sm:items-start sm:justify-between sm:gap-10 lg:gap-14',
-          )}
-        >
-          <div className={cn('shrink-0', !narrowLayout && 'sm:pt-1')}>
+        {/* Intro */}
+        <section className="mb-12 sm:mb-14">
+          <div className="flex items-start gap-4">
             {content.profileImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={content.profileImageUrl}
                 alt={displayName}
-                className={cn(
-                  'border border-[var(--portfolio-border)] object-cover dark:border-zinc-600',
-                  narrowLayout ? 'h-20 w-20' : 'h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32',
-                )}
+                className={portfolioClassicAvatarClass(avatarSize)}
               />
             ) : (
               <div
                 className={cn(
-                  'flex items-center justify-center border border-[var(--portfolio-border)] font-bold text-zinc-400 dark:border-zinc-600 dark:text-[var(--portfolio-fg-muted)]',
-                  narrowLayout ? 'h-20 w-20 text-xl' : 'h-24 w-24 text-2xl sm:h-28 sm:w-28 md:h-32 md:w-32',
+                  portfolioClassicAvatarClass(avatarSize),
+                  'flex items-center justify-center bg-[color-mix(in_srgb,var(--portfolio-fg)_6%,var(--portfolio-bg))] font-mono text-lg font-bold text-[var(--portfolio-fg-muted)]',
                 )}
               >
                 {initial}
               </div>
             )}
+            <div className="min-w-0 pt-0.5">
+              <h1 className={portfolioClassicHeroNameClass()}>{brandLabel}</h1>
+              <p className={portfolioClassicHeroSubtitleClass()}>{displayName}</p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1 space-y-4">
-            {skillsEyebrow ? (
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--portfolio-fg-muted)]">{skillsEyebrow}</p>
-            ) : null}
-            <h1
-              className={cn(
-                'break-words font-bold leading-tight tracking-tight text-[var(--portfolio-fg)]',
-                narrowLayout ? 'text-2xl' : 'text-[clamp(1.75rem,3vw+0.5rem,3rem)]',
-              )}
-            >
-              {displayName}
-            </h1>
-            {content.headline ? (
-              <p className="max-w-xl text-base font-semibold leading-relaxed text-[var(--portfolio-fg-muted)] sm:text-lg">
-                {content.headline}
-              </p>
-            ) : null}
-            {content.location ? (
-              <p className="flex items-center gap-2 text-sm text-[var(--portfolio-fg-muted)]">
-                <MapPin className="h-4 w-4 shrink-0" />
-                {content.location}
-              </p>
-            ) : null}
-            {profileLinks.length > 0 ? (
-              <PortfolioProfileLinkButtons links={profileLinks} neu={false} className="pt-2" />
-            ) : null}
-          </div>
+
+          {(bioParagraphs.length > 0 || content.headline) && (
+            <div className="mt-8 space-y-5">
+              {bioParagraphs.map((p, i) => (
+                <p key={i} className={portfolioClassicBodyClass()}>
+                  {p}
+                </p>
+              ))}
+              {content.headline ? (
+                <blockquote className={portfolioClassicCalloutClass()}>{content.headline}</blockquote>
+              ) : null}
+            </div>
+          )}
+
+          {content.location ? (
+            <p className="mt-6 flex items-center gap-2 text-sm text-[var(--portfolio-fg-muted)] [font-family:var(--classic-body-font)]">
+              <MapPin className="h-3.5 w-3.5 shrink-0 opacity-60" />
+              {content.location}
+            </p>
+          ) : null}
+
+          {profileLinks.length > 0 ? (
+            <PortfolioProfileLinkButtons links={profileLinks} neu={false} className="mt-6" />
+          ) : null}
         </section>
 
-        {bioParagraphs.length > 0 && (
-          <section id="about" className="mb-14 scroll-mt-24 sm:mb-16">
-            <SectionTitle>About</SectionTitle>
-            <div className="max-w-prose space-y-4 text-sm leading-relaxed text-[var(--portfolio-fg-muted)] sm:text-[15px] sm:leading-[1.75]">
-              {bioParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+        {/* Projects — 2-col grid like reference */}
+        {content.projects && content.projects.length > 0 && (
+          <ClassicSection
+            id="projects"
+            title="Featured Projects"
+            description="Selected work — tools, systems, and things shipped."
+          >
+            <div className={cn('grid gap-4', !narrowLayout && 'sm:grid-cols-2')}>
+              {content.projects.map((project, idx) => {
+                const links = getProjectLinks(project);
+                const primaryLink = links[0];
+                const href = primaryLink ? normalizeOutboundHref(primaryLink.url) : null;
+                return (
+                  <article key={`proj-${idx}`} className={portfolioClassicCardClass()}>
+                    <h3 className={portfolioClassicCardTitleClass()}>{project.name}</h3>
+                    {project.description ? (
+                      <p className={cn('mt-3 flex-1', portfolioClassicBodyClass())}>{project.description}</p>
+                    ) : null}
+                    {project.technologies && project.technologies.length > 0 ? (
+                      <div className="mt-4 flex flex-wrap gap-1.5">
+                        {project.technologies.map((tech) => (
+                          <span key={tech} className={portfolioClassicTagClass()}>
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {href ? (
+                      <a href={href} target="_blank" rel="noreferrer" className={portfolioClassicTextLinkClass()}>
+                        View Project
+                        <ArrowUpRight className="size-3.5" aria-hidden />
+                      </a>
+                    ) : null}
+                  </article>
+                );
+              })}
             </div>
-          </section>
+          </ClassicSection>
         )}
 
+        {/* Experience */}
         {sortedExperience.length > 0 && (
-          <section id="experience" className="mb-14 scroll-mt-24 sm:mb-16">
-            <SectionTitle>Work experience</SectionTitle>
-            <div className="space-y-10 sm:space-y-12">
+          <ClassicSection
+            id="experience"
+            title="Experience"
+            description="Roles, teams, and what I worked on."
+          >
+            <div className="space-y-4">
               {sortedExperience.map((exp, idx) => {
                 const dateStr = `${exp.startDate}${exp.endDate ? ` — ${exp.endDate}` : ' — Present'}`;
                 return (
-                  <article key={`exp-${idx}`}>
-                    <div
-                      className={cn(
-                        'flex flex-col gap-2',
-                        !narrowLayout && 'sm:flex-row sm:items-baseline sm:justify-between sm:gap-4',
-                      )}
-                    >
-                      <h3
-                        className={cn(
-                          'font-bold text-[var(--portfolio-fg)]',
-                          narrowLayout ? 'text-base' : 'text-base sm:text-lg',
-                        )}
-                      >
-                        {exp.role}
-                      </h3>
-                      {exp.location ? (
-                        <span className="w-fit shrink-0 border border-[var(--portfolio-border)] bg-[var(--portfolio-surface)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:border-zinc-600  dark:text-zinc-400">
-                          {exp.location}
-                        </span>
-                      ) : null}
+                  <article key={`exp-${idx}`} className={portfolioClassicCardClass()}>
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <h3 className={portfolioClassicCardTitleClass()}>{exp.role}</h3>
+                      <span className="font-mono text-[11px] tabular-nums text-[var(--portfolio-fg-muted)]">
+                        {dateStr}
+                      </span>
                     </div>
-                    <p className="mt-1.5 text-sm text-[var(--portfolio-fg-muted)]">{exp.company}</p>
-                    <p className="mt-2 text-xs font-medium tabular-nums text-[var(--portfolio-fg-muted)]">{dateStr}</p>
+                    <p className={cn('mt-1.5', portfolioClassicBodyClass())}>{exp.company}</p>
+                    {exp.location ? (
+                      <p className="mt-2">
+                        <span className={portfolioClassicTagClass()}>{exp.location}</span>
+                      </p>
+                    ) : null}
                     {hasVisibleBullets(exp.bullets) ? (
-                      <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-[var(--portfolio-fg-muted)] sm:mt-5">
+                      <ul className="mt-4 space-y-2 border-t border-[var(--portfolio-border)] pt-4">
                         {visibleBullets(exp.bullets).map((b, i) => (
-                          <li key={i} className="flex gap-3">
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
+                          <li key={i} className={portfolioClassicBulletClass()}>
+                            <span className={portfolioClassicBulletDotClass()} aria-hidden />
                             <span>{b}</span>
                           </li>
                         ))}
@@ -265,21 +324,20 @@ export function PortfolioClassicMonoView({
                 );
               })}
             </div>
-          </section>
+          </ClassicSection>
         )}
 
         {content.education && content.education.length > 0 && (
-          <section id="education" className="mb-14 scroll-mt-24 sm:mb-16">
-            <SectionTitle>Education</SectionTitle>
-            <div className="space-y-8">
+          <ClassicSection id="education" title="Education">
+            <div className="space-y-4">
               {content.education.map((edu, idx) => (
-                <article key={`edu-${idx}`}>
-                  <h3 className="text-base font-bold text-[var(--portfolio-fg)] sm:text-lg">{edu.institution}</h3>
-                  <p className="mt-1.5 text-sm text-[var(--portfolio-fg-muted)]">
+                <article key={`edu-${idx}`} className={portfolioClassicCardClass()}>
+                  <h3 className={portfolioClassicCardTitleClass()}>{edu.institution}</h3>
+                  <p className={cn('mt-1.5', portfolioClassicBodyClass())}>
                     {edu.degree}
                     {edu.field ? ` · ${edu.field}` : ''}
                   </p>
-                  <p className="mt-2 text-xs font-medium tabular-nums text-[var(--portfolio-fg-muted)]">
+                  <p className="mt-2 font-mono text-[11px] tabular-nums text-[var(--portfolio-fg-muted)]">
                     {edu.startDate}
                     {edu.endDate ? ` — ${edu.endDate}` : ''}
                     {edu.gpa ? ` · GPA ${edu.gpa}` : ''}
@@ -287,80 +345,42 @@ export function PortfolioClassicMonoView({
                 </article>
               ))}
             </div>
-          </section>
-        )}
-
-        {content.projects && content.projects.length > 0 && (
-          <section id="projects" className="mb-14 scroll-mt-24 sm:mb-16">
-            <SectionTitle>Projects</SectionTitle>
-            <div className="space-y-10 sm:space-y-12">
-              {content.projects.map((project, idx) => (
-                <article key={`proj-${idx}`}>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-base font-bold text-[var(--portfolio-fg)] sm:text-lg">{project.name}</h3>
-                  </div>
-                  {project.description ? (
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)] sm:mt-3">{project.description}</p>
-                  ) : null}
-                  <PortfolioProjectLinkChips project={project} neu={false} className="mt-3" />
-                  {hasVisibleBullets(project.bullets) ? (
-                    <ul className="mt-4 space-y-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
-                      {visibleBullets(project.bullets).map((b, i) => (
-                        <li key={i} className="flex gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
-                          <span>{b}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          </section>
+          </ClassicSection>
         )}
 
         {content.skills && content.skills.length > 0 && (
-          <section id="skills" className="mb-14 scroll-mt-24 sm:mb-16">
-            <SectionTitle>Skills</SectionTitle>
+          <ClassicSection id="skills" title="Skills" description="Languages, frameworks, and tooling.">
             <div className="flex flex-wrap gap-2">
               {content.skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="border border-[var(--portfolio-border)] bg-[var(--portfolio-surface)] px-2.5 py-1 text-xs font-medium leading-none text-zinc-700 dark:border-zinc-700  dark:text-zinc-300"
-                >
+                <span key={skill} className={portfolioClassicTagClass()}>
                   {skill}
                 </span>
               ))}
             </div>
-          </section>
+          </ClassicSection>
         )}
 
         {content.awards && content.awards.filter(Boolean).length > 0 && (
-          <section className="mb-14 sm:mb-16">
-            <SectionTitle>Awards</SectionTitle>
-            <ul className="space-y-2.5 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
-              {content.awards.filter(Boolean).map((a, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
-                  <span>{a}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <ClassicListSection
+            title="Awards"
+            description="Honors, prizes, and recognition."
+            items={content.awards.filter(Boolean)}
+          />
         )}
 
         {content.extracurricular && content.extracurricular.length > 0 && (
-          <section className="mb-14 sm:mb-16">
-            <SectionTitle>Extracurricular</SectionTitle>
-            <div className="space-y-8">
+          <ClassicSection title="Extracurricular">
+            <div className="space-y-4">
               {content.extracurricular.map((block, idx) => (
-                <article key={`ex-${idx}`}>
-                  <h3 className="text-base font-bold text-[var(--portfolio-fg)]">{block.title}</h3>
+                <article key={`ex-${idx}`} className={portfolioClassicCardClass()}>
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-wider text-[var(--portfolio-fg-muted)]">
+                    {block.title}
+                  </p>
                   {hasVisibleBullets(block.bullets) ? (
-                    <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
+                    <ul className="mt-3 space-y-2">
                       {visibleBullets(block.bullets).map((b, i) => (
-                        <li key={i} className="flex gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
+                        <li key={i} className={portfolioClassicBulletClass()}>
+                          <span className={portfolioClassicBulletDotClass()} aria-hidden />
                           <span>{b}</span>
                         </li>
                       ))}
@@ -369,33 +389,42 @@ export function PortfolioClassicMonoView({
                 </article>
               ))}
             </div>
-          </section>
+          </ClassicSection>
+        )}
+
+        {content.certifications && content.certifications.filter(Boolean).length > 0 && (
+          <ClassicListSection
+            title="Certifications"
+            description="Credentials and completed programs."
+            items={content.certifications.filter(Boolean)}
+          />
+        )}
+
+        {content.languages && content.languages.filter(Boolean).length > 0 && (
+          <ClassicListSection
+            id="languages"
+            title="Languages"
+            description="Spoken languages and proficiency."
+            items={content.languages.filter(Boolean)}
+          />
         )}
 
         {content.otherSections && content.otherSections.length > 0 && (
-          <section className="mb-14 space-y-12 sm:mb-16">
+          <section className="mb-14 space-y-10 sm:mb-16">
             {content.otherSections.map((block, idx) => (
-              <div key={`other-${idx}`}>
-                <SectionTitle>{block.title || 'Section'}</SectionTitle>
+              <ClassicSection key={`other-${idx}`} title={block.title || 'More'}>
                 {hasVisibleBullets(block.bullets) ? (
-                  <ul className="space-y-2.5 text-sm leading-relaxed text-[var(--portfolio-fg-muted)]">
-                    {visibleBullets(block.bullets).map((b, i) => (
-                      <li key={i} className="flex gap-3">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--portfolio-fg-muted)]" aria-hidden />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <ClassicListCard items={visibleBullets(block.bullets)} />
                 ) : null}
-              </div>
+              </ClassicSection>
             ))}
           </section>
         )}
 
         {!narrowLayout ? (
-          <div className="mt-16 border-t border-[var(--portfolio-border)] bg-[color-mix(in_srgb,var(--portfolio-fg)_6%,var(--portfolio-bg))] px-5 py-6 sm:mt-20 sm:px-6 sm:py-8 dark:border-zinc-800 dark:bg-[color-mix(in_srgb,var(--portfolio-fg)_8%,var(--portfolio-bg))]">
-            <PortfolioPublicFooter neu={false} label="Published profile" band />
-          </div>
+          <footer className="mt-12 border-t border-[var(--portfolio-border)] pt-8">
+            <PortfolioPublicFooter neu={false} label="Published profile" />
+          </footer>
         ) : null}
       </div>
     </div>

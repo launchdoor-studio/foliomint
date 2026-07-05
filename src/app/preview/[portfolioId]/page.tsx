@@ -67,6 +67,7 @@ export default async function PortfolioPreviewPage({ params }: Props) {
         themeColors={extractPortfolioThemeColors(
           portfolio.themeSettings as PortfolioThemeSettings | null,
         )}
+        theme={portfolio.theme}
       >
         <PortfolioPublicHome
           portfolio={portfolio}

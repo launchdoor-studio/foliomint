@@ -6,8 +6,8 @@ export const EDITOR_WIZARD_STEPS = [
   },
   {
     id: 'appearance',
-    title: 'Site colors',
-    description: 'Accent, background, and text colors for light and dark mode on your published site.',
+    title: 'Look & colors',
+    description: 'Portfolio style (Classic or Neubrutalism), accent, and canvas colors for light and dark mode.',
   },
   {
     id: 'skills',

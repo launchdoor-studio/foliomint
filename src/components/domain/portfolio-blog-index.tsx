@@ -77,7 +77,7 @@ export async function PortfolioBlogIndex({
                 href={`${siteBasePath}/blog/${p.slug}`}
                 className={cn('group block', card, PORTFOLIO_CARD_PAD)}
               >
-                <h2 className="text-lg font-semibold text-zinc-900 group-hover:text-[var(--portfolio-accent)] dark:text-zinc-100">
+                <h2 className="text-lg font-semibold text-[var(--portfolio-fg)] transition-colors group-hover:text-[var(--portfolio-accent)]">
                   {p.title}
                 </h2>
                 {p.excerpt && (

@@ -1,3 +1,4 @@
+import { sanitizeOutboundUrl } from '@/lib/safe-url';
 import type { SocialLink } from '@/lib/social-links';
 import type { PortfolioContent } from '@/types';
 
@@ -12,9 +13,12 @@ export function buildPortfolioProfileLinks(
 ): SocialLink[] {
   const links: SocialLink[] = [];
   if (content.email) links.push({ label: 'Email', href: `mailto:${content.email}` });
-  if (content.website) links.push({ label: 'Website', href: content.website });
-  if (content.github) links.push({ label: 'GitHub', href: content.github });
-  if (content.linkedin) links.push({ label: 'LinkedIn', href: content.linkedin });
+  const website = content.website ? sanitizeOutboundUrl(content.website) : null;
+  if (website) links.push({ label: 'Website', href: website });
+  const github = content.github ? sanitizeOutboundUrl(content.github) : null;
+  if (github) links.push({ label: 'GitHub', href: github });
+  const linkedin = content.linkedin ? sanitizeOutboundUrl(content.linkedin) : null;
+  if (linkedin) links.push({ label: 'LinkedIn', href: linkedin });
   links.push(...socialLinks);
 
   const seen = new Set<string>();
@@ -26,4 +30,7 @@ export function buildPortfolioProfileLinks(
   });
 }
 
-export const ACTIVE_PORTFOLIO_THEME = 'neubrutalism' as const;
+export const DEFAULT_PORTFOLIO_THEME = 'neubrutalism' as const;
+
+/** @deprecated Use DEFAULT_PORTFOLIO_THEME */
+export const ACTIVE_PORTFOLIO_THEME = DEFAULT_PORTFOLIO_THEME;

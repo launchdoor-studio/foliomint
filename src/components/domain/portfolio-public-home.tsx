@@ -5,7 +5,6 @@ import { PortfolioContentView } from '@/components/domain/portfolio-content-view
 import { db } from '@/lib/db';
 import { blogPosts, integrations } from '@/lib/db/schema';
 import type { PublicPortfolioRow } from '@/lib/portfolio-public';
-import { ACTIVE_PORTFOLIO_THEME } from '@/lib/portfolio-profile-links';
 import { integrationToSocialLink } from '@/lib/social-links';
 import { logPortfolioView, parseViewHeaders } from '@/lib/view-log';
 import type { PortfolioContent } from '@/types';
@@ -58,7 +57,7 @@ export async function PortfolioPublicHome({
       content={content}
       slug={displaySlug}
       siteBasePath={siteBasePath}
-      theme={ACTIVE_PORTFOLIO_THEME}
+      theme={portfolio.theme}
       showBlogLink={showBlog}
       socialLinks={socialLinks}
     />

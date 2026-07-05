@@ -7,6 +7,7 @@ import { PortfolioClassicMonoView } from '@/components/domain/portfolio-classic-
 import { PortfolioProfileLinkButtons } from '@/components/domain/portfolio-profile-link-buttons';
 import { PortfolioProjectLinkChips } from '@/components/domain/portfolio-project-link-chips';
 import { PortfolioPublicShell } from '@/components/domain/portfolio-public-shell';
+import { sanitizeImageUrl } from '@/lib/safe-url';
 import { buildPortfolioProfileLinks } from '@/lib/portfolio-profile-links';
 import { cn } from '@/lib/utils';
 import {
@@ -130,6 +131,7 @@ function NeubrutalismPreview({
   const displayName = content.name?.trim() || slug;
   const initial = displayName.charAt(0).toUpperCase() || '?';
   const profileLinks = buildPortfolioProfileLinks(content, socialLinks);
+  const profileImageUrl = sanitizeImageUrl(content.profileImageUrl);
   const card = portfolioCardClass(neu);
   const pad = PORTFOLIO_CARD_PAD;
 
@@ -143,10 +145,10 @@ function NeubrutalismPreview({
           )}
         >
           <div className="shrink-0">
-            {content.profileImageUrl ? (
+            {profileImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={content.profileImageUrl}
+                src={profileImageUrl}
                 alt={displayName}
                 className={cn(
                   'border-4 border-[var(--portfolio-fg)] object-cover shadow-[6px_6px_0_0_rgb(24_24_27)] dark:border-[var(--portfolio-border)] dark:shadow-[6px_6px_0_0_rgb(228_228_231)]',
@@ -382,7 +384,7 @@ export function EditorLivePreview({
   const siteBasePath = portfolioSiteBasePath({ publicHandle: publicHandle ?? null, slug });
 
   return (
-    <PortfolioPublicShell accentColor={accentColor} themeColors={themeColors} embed>
+    <PortfolioPublicShell accentColor={accentColor} themeColors={themeColors} theme={theme} embed>
       <div className="px-3 py-3 sm:px-4 sm:py-4">
         {neu ? (
           <NeubrutalismPreview
